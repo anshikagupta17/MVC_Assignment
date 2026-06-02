@@ -1,0 +1,68 @@
+[
+    {
+        "id": 1,
+        "type": "Town hall",
+        "levels": [
+            {"level":1, "max_health": 450, "cost":0, "damage": 0, "max_quantity": 1},
+            {"level":2, "max_health": 1600, "cost":1000, "damage": 0, "max_quantity": 1},
+            {"level":3, "max_health": 1850, "cost":4000, "damage": 0, "max_quantity": 1},
+            {"level":4, "max_health": 2100, "cost":25000, "damage": 0, "max_quantity": 1}
+        ],
+        "range": 0,
+        "cost_type": "gold"
+    },
+
+    {
+        "id": 2,
+        "type": "Cannon",
+        "levels": [
+            {"level":1, "max_health": 420, "cost":250, "damage": 7, "max_quantity": 2},
+            {"level":2, "max_health": 460, "cost":500, "damage": 9, "max_quantity": 3},
+            {"level":3, "max_health": 500, "cost":1000, "damage": 11, "max_quantity": 4},
+            {"level":4, "max_health": 540, "cost":2000, "damage": 15, "max_quantity": 5}
+        ],
+        "range": 9,
+        "cost_type": "gold"
+    },
+
+    {
+        "id": 3,
+        "type": "Archer Tower",
+        "levels": [
+            {"level":1, "max_health": 0, "cost":0, "damage": 0, "max_quantity": 0 },
+            {"level":2, "max_health": 380, "cost":1000, "damage": 6, "max_quantity": 1},
+            {"level":3, "max_health": 420, "cost":2000, "damage": 8, "max_quantity": 2},
+            {"level":4, "max_health": 460, "cost":5000, "damage": 10, "max_quantity": 3}
+        ],
+        "range": 10,
+        "cost_type": "gold"
+    },
+
+    {
+        "id":4,
+        "type": "Wall",
+        "levels": [
+            {"level":1, "max_health": 0, "cost":0, "damage": 0, "max_quantity": 0 },
+            {"level":2, "max_health": 300, "cost":250, "damage": 0, "max_quantity": 25},
+            {"level":3, "max_health": 500, "cost":500, "damage": 0, "max_quantity": 50},
+            {"level":4, "max_health": 700, "cost":1000, "damage": 0, "max_quantity": 75}
+        ],
+        "range": 0,
+        "cost_type": "gold"
+    },
+
+    {
+        "id":5,
+        "type": "Mortar",
+        "levels": [
+            {"level":1, "max_health": 0, "cost":0, "damage": 0, "max_quantity": 0 },
+            {"level":2, "max_health": 0, "cost":0, "damage": 0, "max_quantity": 0},
+            {"level":3, "max_health": 400, "cost":8000, "damage": 20, "max_quantity": 1},
+            {"level":4, "max_health": 450, "cost":16000, "damage": 30, "max_quantity": 1}
+        ],
+        "min_range": 4,
+        "max_range": 11,
+        "cost_type": "gold"
+    }
+
+]
