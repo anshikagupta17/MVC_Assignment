@@ -45,6 +45,7 @@ CREATE TABLE defense_metadata (
     unlock_level INT NOT NULL,
     damage BIGINT NOT NULL,
     max_health INT NOT NULL CHECK (max_health>=0),
+    upgrade_cost bigint not null,
     range INT NOT NULL,
     cost_type VARCHAR(10) DEFAULT 'Gold' NOT NULL,
     max_quantity BIGINT NOT NULL,
