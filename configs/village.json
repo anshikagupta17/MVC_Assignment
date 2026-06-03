@@ -1,0 +1,12 @@
+
+    {
+        "Townhall":{
+            "levels": [
+                {"level":1, "max_health": 450, "upgrade_cost":0, "max_quantity": 1, "max_housing_space": 20},
+                {"level":2, "max_health": 1600, "upgrade_cost":1000, "max_quantity": 1, "max_housing_space": 25},
+                {"level":3, "max_health": 1850, "upgrade_cost":4000, "max_quantity": 1, "max_housing_space": 30},
+                {"level":4, "max_health": 2100, "upgrade_cost":25000, "max_quantity": 1, "max_housing_space": 35}
+            ],
+            "cost_type": "Gold"
+        }
+    }
