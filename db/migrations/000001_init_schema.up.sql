@@ -5,61 +5,65 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE village (
+CREATE TABLE villages (
     id SERIAL PRIMARY KEY,
     townhall_level INT NOT NULL DEFAULT 1 check (townhall_level>=1 and townhall_level<=4),
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     gold BIGINT NOT NULL DEFAULT 750 check(gold>=0),
     elixir BIGINT NOT NULL DEFAULT 750 check (elixir>=0),
-    housing_space INT NOT NULL DEFAULT 20
+    housing_space INT NOT NULL
 );
 
 CREATE TABLE troops_metadata (
-    id SERIAL PRIMARY KEY,
+    id serial primary key,
+    type_id int NOT NULL,
+    level int NOT NULL, 
     damage INT NOT NULL,
     max_health INT NOT NULL Check(max_health>=0),
-    troops_level INT,
     name VARCHAR(20) NOT NULL,
     upgrade_cost BIGINT NOT NULL,
     housing_space INT NOT NULL,
     cost_type VARCHAR(10) NOT NULL DEFAULT 'Elixir',
-    speed INT NOT NULL  
+    speed INT NOT NULL,
+    unlock_level int not null,
+    UNIQUE(TYPE_ID,level)
 );
 
 CREATE TABLE troops_village (
     id SERIAL PRIMARY KEY,
-    village_id BIGINT REFERENCES villages(id) NOT NULL ON DELETE CASCADE,
-    quantity BIGINT DEFAULT 0,
-    troops_id BIGINT REFERENCES troops_metadata(id) ON DELETE CASCADE NOT NULL,
+    village_id BIGINT  NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
+    quantity BIGINT DEFAULT 0 check(quantity>=0),
+    troops_id BIGINT NOT NULL REFERENCES troops_metadata(id) ON DELETE CASCADE ,
     UNIQUE(village_id, troops_id)
 );
 
 CREATE TABLE defense_metadata (
-    id SERIAL PRIMARY KEY,
+    id serial primary key,
+    type_id int NOT NULL,
+    level int NOT NULL,
     name VARCHAR(20) NOT NULL,
-    defense_level INT,
+    unlock_level INT NOT NULL,
     damage BIGINT NOT NULL,
     max_health INT NOT NULL CHECK (max_health>=0),
-    upgrade_cost BIGINT NOT NULL,
     range INT NOT NULL,
     cost_type VARCHAR(10) DEFAULT 'Gold' NOT NULL,
-    max_quantity BIGINT NOT NULL
+    max_quantity BIGINT NOT NULL,
+    UNIQUE(type_id,level)
 );
 
 CREATE TABLE defense_village (
     id SERIAL PRIMARY KEY,
-    village_id BIGINT REFERENCES villages(id) NOT NULL ON DELETE CASCADE,
+    village_id BIGINT NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
     X BIGINT NOT NULL,
     Y BIGINT NOT NULL,
-    defense_id BIGINT REFERENCES defense_metadata(id) NOT NULL ON DELETE CASCADE,
-    UNIQUE(village_id, X, Y, defense_id)
+    defense_id BIGINT NOT NULL REFERENCES defense_metadata(id) ON DELETE CASCADE,
+    UNIQUE(village_id, X, Y)
 );
 
-CREATE TABLE battle (
+CREATE TABLE battles (
     ID SERIAL PRIMARY KEY,
-    attacker_id BIGINT REFERENCES villages(id) NOT NULL ON DELETE CASCADE,
-    defender_id BIGINT REFERENCES villages(id) NOT NULL ON DELETE CASCADE,
-    result varchar(50) NOT NULL,
+    attacker_id BIGINT NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
+    defender_id BIGINT NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
     loot_gold BIGINT NOT NULL check(loot_gold>=0),
     loot_elixir BIGINT NOT NULL CHECK(loot_elixir>=0),
     start_time TIMESTAMP NOT NULL,
@@ -67,8 +71,8 @@ CREATE TABLE battle (
 );
 
 CREATE TABLE battle_events (
-    battle_id BIGINT references battles(id) NOT NULL ON DELETE CASCADE,
+    battle_id BIGINT NOT NULL references battles(id) ON DELETE CASCADE,
     event_order BIGINT NOT NULL, 
     event_text JSONB NOT NULL,
-    primary key(battles_id, event_order)
+    primary key(battle_id, event_order)
 );
