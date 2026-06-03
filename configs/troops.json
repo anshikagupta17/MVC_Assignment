@@ -1,72 +1,77 @@
 [
     {
-        "id": 1,
-        "type": "Barbarian",
-        "level": [
-            {"level": 1, "damage": 9, "max_health": 45, "training_cost": 25},
-            {"level": 2, "damage": 12, "max_health": 54, "training_cost": 40},
-            {"level": 3, "damage": 15, "max_health": 65, "training_cost": 60},
-            {"level": 4, "damage": 18, "max_health": 85, "training_cost": 100}
+        "type_id": 1,
+        "name": "Barbarian",
+        "levels": [
+            {"level": 1, "damage": 9, "max_health": 45, "upgrade_cost": 25},
+            {"level": 2, "damage": 12, "max_health": 54, "upgrade_cost": 40},
+            {"level": 3, "damage": 15, "max_health": 65, "upgrade_cost": 60},
+            {"level": 4, "damage": 18, "max_health": 85, "upgrade_cost": 100}
         ],
         "speed": 18,
         "housing_space": 1,
-        "cost_type": "elixir"
+        "cost_type": "Elixir",
+        "unlock_level": 1
     },
 
     {
-        "id": 2,
-        "type": "Archer",
-        "level": [
-            {"level": 1, "damage": 7, "max_health": 20, "training_cost": 50},
-            {"level": 2, "damage": 9, "max_health": 23, "training_cost": 80},
-            {"level": 3, "damage": 12, "max_health": 28, "training_cost": 120},
-            {"level": 4, "damage": 16, "max_health": 33, "training_cost": 160}
+        "type_id": 2,
+        "name": "Archer",
+        "levels": [
+            {"level": 1, "damage": 7, "max_health": 20, "upgrade_cost": 50},
+            {"level": 2, "damage": 9, "max_health": 23, "upgrade_cost": 80},
+            {"level": 3, "damage": 12, "max_health": 28, "upgrade_cost": 120},
+            {"level": 4, "damage": 16, "max_health": 33, "upgrade_cost": 160}
         ],
         "speed": 24,
         "housing_space": 1,
-        "cost_type": "elixir"
+        "cost_type": "Elixir",
+        "unlock_level": 2
     },
 
     {
-        "id": 3,
-        "type": "Giant",
-        "level": [
-            {"level": 1, "damage": 11, "max_health": 300, "training_cost": 250},
-            {"level": 2, "damage": 14, "max_health": 360, "training_cost": 500},
-            {"level": 3, "damage": 19, "max_health": 430, "training_cost": 1000},
-            {"level": 4, "damage": 24, "max_health": 520, "training_cost": 1500}
+        "type_id": 3,
+        "name": "Giant",
+        "levels": [
+            {"level": 1, "damage": 11, "max_health": 300, "upgrade_cost": 250},
+            {"level": 2, "damage": 14, "max_health": 360, "upgrade_cost": 500},
+            {"level": 3, "damage": 19, "max_health": 430, "upgrade_cost": 1000},
+            {"level": 4, "damage": 24, "max_health": 520, "upgrade_cost": 1500}
         ],
         "speed": 12,
         "housing_space": 5,
-        "cost_type": "elixir"
+        "cost_type": "Elixir",
+        "unlock_level":3
     },
 
     {
-        "id": 4,
-        "type": "Wizard",
-        "level": [
-            {"level": 1, "damage": 50, "max_health": 75, "training_cost": 1500},
-            {"level": 2, "damage": 60, "max_health": 90, "training_cost": 2000},
-            {"level": 3, "damage": 70, "max_health": 108, "training_cost": 2500},
-            {"level": 4, "damage": 90, "max_health": 130, "training_cost": 3000}
+        "type_id": 4,
+        "name": "Wizard",
+        "levels": [
+            {"level": 1, "damage": 50, "max_health": 75, "upgrade_cost": 1500},
+            {"level": 2, "damage": 60, "max_health": 90, "upgrade_cost": 2000},
+            {"level": 3, "damage": 70, "max_health": 108, "upgrade_cost": 2500},
+            {"level": 4, "damage": 90, "max_health": 130, "upgrade_cost": 3000}
         ],
         "speed": 16,
         "housing_space": 4,
-        "cost_type": "elixir"
+        "cost_type": "Elixir",
+        "unlock_level": 4
     },
 
     {
-        "id": 5,
-        "type": "Goblin",
-        "level": [
-            {"level": 1, "damage": 11, "max_health": 25, "training_cost": 25},
-            {"level": 2, "damage": 14, "max_health": 30, "training_cost": 40},
-            {"level": 3, "damage": 19, "max_health": 36, "training_cost": 60},
-            {"level": 4, "damage": 24, "max_health": 43, "training_cost": 100}
+        "type_id": 5,
+        "name": "Goblin",
+        "levels": [
+            {"level": 1, "damage": 11, "max_health": 25, "upgrade_cost": 25},
+            {"level": 2, "damage": 14, "max_health": 30, "upgrade_cost": 40},
+            {"level": 3, "damage": 19, "max_health": 36, "upgrade_cost": 60},
+            {"level": 4, "damage": 24, "max_health": 43, "upgrade_cost": 100}
         ],
         "speed": 32,
         "housing_space": 1,
-        "cost_type": "elixir"
+        "cost_type": "Elixir",
+        "unlock_level": 4
     }
 
     
