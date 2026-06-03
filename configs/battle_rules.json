@@ -1,0 +1,10 @@
+{
+    "result": [
+        {"star":0, "min_destruction":0, "townhall_destruction": false, "output": "Battle Lost"},
+        {"star":1, "min_destruction":50, "townhall_destruction": false, "output": "Half Destroyed"},
+        {"star":2, "min_destruction":50, "townhall_destruction": true, "output": "Town Hall Destroyed"},
+        {"star":3, "min_destruction":100, "townhall_destruction": true, "output": "Full destruction"}
+    ],
+
+    "loot_percentage": 30
+}
