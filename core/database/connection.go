@@ -1,25 +1,27 @@
 package db
-import {
+
+import (
+	"context"
 	"log"
-	_ "github.com/lib/pq"
-	"database/sql"
-}
 
-func connection() *sql.DB {
-	connect:= "host=localhost port=5432 username=postgres dbname=MVC_Assignment sslmode=disable"
+	"github.com/jackc/pgx/v5"
+)
 
-	db, err:= sql.Open("postgres", connect)
+func connection() *pgx.Conn {
+	connect := "host=localhost port=5432 user=postgres dbname=MVC_Assignment sslmode=disable"
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, connect)
 
-	if err!=nil {
+	if err != nil {
 		log.Fatal("Connection not made: ", err)
 
 	}
 
-	err= db.Ping()
+	err = conn.Ping(ctx)
 
-	if err!=nil {
+	if err != nil {
 		log.Fatal("DB not connected: ", err)
 	}
 
-	return db
+	return conn
 }

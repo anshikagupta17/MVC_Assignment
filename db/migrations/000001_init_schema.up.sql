@@ -1,3 +1,23 @@
+CREATE TYPE troop_type AS ENUM (
+    'Barbarians',
+    'Archers',
+    'Giant',
+    'Goblin',
+    'Wizard'
+); 
+
+CREATE TYPE resource_type AS ENUM (
+    'Gold',
+    'Elixir'
+);
+
+CREATE TYPE defense_type AS ENUM (
+    'Cannon',
+    'Archer Tower',
+    'Wall',
+    'Mortar'
+);
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -11,7 +31,8 @@ CREATE TABLE villages (
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     gold BIGINT NOT NULL DEFAULT 750 check(gold>=0),
     elixir BIGINT NOT NULL DEFAULT 750 check (elixir>=0),
-    housing_space INT NOT NULL
+    housing_space INT NOT NULL,
+    trophies INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE troops_metadata (
@@ -20,12 +41,13 @@ CREATE TABLE troops_metadata (
     level int NOT NULL, 
     damage INT NOT NULL,
     max_health INT NOT NULL Check(max_health>=0),
-    name VARCHAR(20) NOT NULL,
+    name troop_type NOT NULL,
     upgrade_cost BIGINT NOT NULL,
     housing_space INT NOT NULL,
-    cost_type VARCHAR(10) NOT NULL DEFAULT 'Elixir',
+    cost_type resource_type NOT NULL DEFAULT 'Elixir',
     speed INT NOT NULL,
     unlock_level int not null,
+    upgrade_time int not null
     UNIQUE(TYPE_ID,level)
 );
 
@@ -47,8 +69,9 @@ CREATE TABLE defense_metadata (
     max_health INT NOT NULL CHECK (max_health>=0),
     upgrade_cost bigint not null,
     range INT NOT NULL,
-    cost_type VARCHAR(10) DEFAULT 'Gold' NOT NULL,
+    cost_type resource_type DEFAULT 'Gold' NOT NULL,
     max_quantity BIGINT NOT NULL,
+     upgrade_time int not null
     UNIQUE(type_id,level)
 );
 
@@ -74,6 +97,6 @@ CREATE TABLE battles (
 CREATE TABLE battle_events (
     battle_id BIGINT NOT NULL references battles(id) ON DELETE CASCADE,
     event_order BIGINT NOT NULL, 
-    event_text JSONB NOT NULL,
+    event_text JSON NOT NULL,
     primary key(battle_id, event_order)
 );
