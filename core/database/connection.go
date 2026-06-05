@@ -3,25 +3,26 @@ package db
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func connection() *pgx.Conn {
-	connect := "host=localhost port=5432 user=postgres dbname=MVC_Assignment sslmode=disable"
-	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, connect)
+var Conn *pgx.Conn
 
+func InitDB() {
+	db_url := os.Getenv("DB_URI")
+
+	conn, err := pgx.Connect(context.Background(), db_url)
 	if err != nil {
-		log.Fatal("Connection not made: ", err)
-
+		log.Fatal("DB connection failed:", err)
 	}
 
-	err = conn.Ping(ctx)
-
+	err = conn.Ping(context.Background())
 	if err != nil {
-		log.Fatal("DB not connected: ", err)
+		log.Fatal("DB not responding:", err)
 	}
 
-	return conn
+	Conn = conn
+	log.Println("DB connected")
 }

@@ -1,27 +1,12 @@
-CREATE TYPE troop_type AS ENUM (
-    'Barbarians',
-    'Archers',
-    'Giant',
-    'Goblin',
-    'Wizard'
-); 
-
 CREATE TYPE resource_type AS ENUM (
     'Gold',
     'Elixir'
 );
 
-CREATE TYPE defense_type AS ENUM (
-    'Cannon',
-    'Archer Tower',
-    'Wall',
-    'Mortar'
-);
-
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    pass_hash VARCHAR(255) NOT NULL, 
+    pass_hash TEXT NOT NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,7 +26,7 @@ CREATE TABLE troops_metadata (
     level int NOT NULL, 
     damage INT NOT NULL,
     max_health INT NOT NULL Check(max_health>=0),
-    name troop_type NOT NULL,
+    name varchar(20) NOT NULL,
     upgrade_cost BIGINT NOT NULL,
     housing_space INT NOT NULL,
     cost_type resource_type NOT NULL DEFAULT 'Elixir',
@@ -52,11 +37,8 @@ CREATE TABLE troops_metadata (
 );
 
 CREATE TABLE troops_village (
-    id SERIAL PRIMARY KEY,
-    village_id BIGINT  NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
-    quantity BIGINT DEFAULT 0 check(quantity>=0),
-    troops_id BIGINT NOT NULL REFERENCES troops_metadata(id) ON DELETE CASCADE ,
-    UNIQUE(village_id, troops_id)
+    village_id BIGINT  NOT NULL primary key REFERENCES villages(id) ON DELETE CASCADE,
+    layout JSONB not null,
 );
 
 CREATE TABLE defense_metadata (
@@ -76,12 +58,8 @@ CREATE TABLE defense_metadata (
 );
 
 CREATE TABLE defense_village (
-    id SERIAL PRIMARY KEY,
-    village_id BIGINT NOT NULL REFERENCES villages(id) ON DELETE CASCADE,
-    X BIGINT NOT NULL,
-    Y BIGINT NOT NULL,
-    defense_id BIGINT NOT NULL REFERENCES defense_metadata(id) ON DELETE CASCADE,
-    UNIQUE(village_id, X, Y)
+    village_id BIGINT NOT NULL PRIMARY KEY REFERENCES villages(id) ON DELETE CASCADE,
+    layout JSONB not null
 );
 
 CREATE TABLE battles (
