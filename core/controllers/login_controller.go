@@ -9,14 +9,15 @@ import (
 	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	var req models.RegisterUser
+func Login(w http.ResponseWriter, r *http.Request) {
+	var req models.LoginUser
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+
 	if req.Username == "" {
 		http.Error(w, "Username is required", http.StatusBadRequest)
 		return
@@ -27,28 +28,27 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash_pass, err := models.HashPass(req.Password)
-
-	if err != nil {
-		http.Error(w, "Failed to process password", http.StatusInternalServerError)
-		return
-	}
-
 	repo := repositories.UserRepository{
 		DB: db.Conn,
 	}
 
-	user_id, err := repo.CreateUser(req.Username, hash_pass)
-
+	user, err := repo.GetUser(req.Username)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
-	response := models.Register_Response{
-		Message: "Registered successfully",
-		UserId:  user_id,
+	err = models.CheckPass(req.Password, user.PassWord)
+	if err != nil {
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
 	}
+
+	response := models.Login_Response{
+		Message: "Registered successfully",
+		UserId:  user.ID,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
