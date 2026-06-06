@@ -1,7 +1,7 @@
 package main
 import (
 	"fmt"
-	"MVC_Assignment/core/database"
+	"github.com/anshikagupta17/MVC_Assignment/core/database"
 
 )
 

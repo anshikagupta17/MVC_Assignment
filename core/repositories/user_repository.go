@@ -3,8 +3,6 @@ package repositories
 import (
 	"context"
 
-	"MVC_Assignment/core/models"
-
 	"github.com/anshikagupta17/MVC_Assignment/core"
 	"github.com/jackc/pgx/v5"
 )
@@ -32,10 +30,10 @@ func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error)
 }
 
 func (r *UserRepository) GetUser(username string) (core.User, error) {
-	ctx:= context.Background()
-	err:= r.DB.QueryRow(ctx,
-		`SELECT FROM users (ID, username,pass_hash)
+	ctx := context.Background()
+	err := r.DB.QueryRow(ctx,
+		`SELECT FROM users (ID, username, pass_hash)
 		VALUES ($1, $2, $3)
-		RETURNING `
+		RETURNING `,
 	)
 }
