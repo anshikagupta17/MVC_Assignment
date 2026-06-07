@@ -31,9 +31,15 @@ func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error)
 
 func (r *UserRepository) GetUser(username string) (core.User, error) {
 	ctx := context.Background()
+	var user core.User
 	err := r.DB.QueryRow(ctx,
-		`SELECT FROM users (ID, username, pass_hash)
-		VALUES ($1, $2, $3)
-		RETURNING `,
-	)
+		`SELECT id, username, pass_hash
+		FROM users
+		WHERE username=$1 `,
+		username).Scan(&user.ID, &user.UserName, &user.PassWord)
+	if err != nil {
+		return core.User{}, err
+	}
+
+	return user, nil
 }
