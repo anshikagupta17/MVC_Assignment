@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/anshikagupta17/MVC_Assignment/core/auth"
 	db "github.com/anshikagupta17/MVC_Assignment/core/database"
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
 	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
@@ -44,9 +45,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := auth.GenerateToken(user.ID, req.Username)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
 	response := models.Login_Response{
-		Message: "Registered successfully",
-		UserId:  user.ID,
+		Message: "Login was successful",
+		Token:   token,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

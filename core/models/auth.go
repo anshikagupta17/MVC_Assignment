@@ -17,5 +17,5 @@ type LoginUser struct {
 
 type Login_Response struct {
 	Message string `json:"message"`
-	UserId  int64  `json:"user_id"`
+	Token   string `json:"token"`
 }
