@@ -16,6 +16,7 @@ type Village struct {
 }
 
 type VillageBuilding struct {
+	ID            int64
 	VillageId     int64
 	BuildingId    int64
 	Level         int64

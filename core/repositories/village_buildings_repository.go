@@ -9,9 +9,9 @@ import (
 func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.VillageBuilding, error) {
 	ctx := context.Background()
 	rows, err := r.DB.Query(ctx,
-		`SELECT building_id, level, quantity, upgrade_ends_at, x, y
-	From buildings_village
-	WHERE village_id= $1`, village_id)
+		`SELECT id, building_id, level, quantity, upgrade_ends_at, x, y
+		From buildings_village
+		WHERE village_id= $1`, village_id)
 	if err != nil {
 		return nil, err
 	}
@@ -20,6 +20,7 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 	for rows.Next() {
 		var building models.VillageBuilding
 		err := rows.Scan(
+			&building.ID,
 			&building.BuildingId,
 			&building.Level,
 			&building.Quantity,
@@ -51,33 +52,53 @@ func (r *VillageRepository) InitialBuildings(village_id int64) error {
 	return err
 }
 
-func (r *VillageRepository) MoveBuilding(village_id, building_id int64, x, y int) error {
+func (r *VillageRepository) MoveBuilding(village_id, building_instance_id int64, x, y int) error {
 	ctx := context.Background()
-	_, err := r.DB.Exec(ctx,
+	_, err := r.DB.Exec(
+		ctx,
 		`UPDATE buildings_village
-		SET x = $3, y = $4
-		WHERE village_id = $1 AND building_id = $2`, village_id, building_id, x, y)
+		SET x = $3,
+			y = $4
+		WHERE village_id = $1
+		AND id = $2`,
+		village_id,
+		building_instance_id,
+		x,
+		y,
+	)
 
 	return err
 }
 
-func (r *VillageRepository) CanPlaceBuilding(village_id, building_id int64, x, y int) (bool, error) {
+func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id int64, x, y int) (bool, error) {
 	ctx := context.Background()
-	var sizex, sizey int
+	var buildingID int64
+
 	err := r.DB.QueryRow(
 		ctx,
-		`SELECT size_x, size_y 
-		FROM buildings_metadata 
-		WHERE id=$1`, building_id).Scan(&sizex, &sizey)
+		`SELECT building_id
+		FROM buildings_village
+		WHERE id = $1`, building_instance_id).Scan(&buildingID)
 
 	if err != nil {
 		return false, err
 	}
-	rows, err := r.DB.Query(
+
+	var sizex, sizey int
+
+	err = r.DB.QueryRow(
 		ctx,
-		`SELECT building_id, x, y 
-		FROM buildings_village 
-		WHERE village_id=$1`, village_id)
+		`SELECT size_x, size_y
+		FROM buildings_metadata
+		WHERE id = $1`, buildingID).Scan(&sizex, &sizey)
+
+	if err != nil {
+		return false, err
+	}
+	rows, err := r.DB.Query(ctx,
+		`SELECT id, building_id, x, y
+	FROM buildings_village
+	WHERE village_id = $1`, village_id)
 
 	if err != nil {
 		return false, err
@@ -91,12 +112,20 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_id int64, x, y
 
 	for rows.Next() {
 
-		var b_id, current_x, current_y int
-		err := rows.Scan(&b_id, &current_x, &current_y)
+		var instanceID int64
+		var b_id int
+		var current_x, current_y int
+
+		err := rows.Scan(
+			&instanceID,
+			&b_id,
+			&current_x,
+			&current_y,
+		)
 		if err != nil {
 			return false, err
 		}
-		if b_id == int(building_id) {
+		if instanceID == building_instance_id {
 			continue
 		}
 

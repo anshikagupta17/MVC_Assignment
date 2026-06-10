@@ -10,9 +10,9 @@ import (
 )
 
 type MoveBuildingRequest struct {
-	BuildingId int64 `json:"building_id"`
-	X          int   `json:"x"`
-	Y          int   `json:"y"`
+	BuildingInstanceId int64 `json:"building_instance_id"`
+	X                  int   `json:"x"`
+	Y                  int   `json:"y"`
 }
 
 func VillageData(w http.ResponseWriter, r *http.Request) {
@@ -73,12 +73,12 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !(req.X >= 0 || req.X <= 49 || req.Y >= 0 || req.Y <= 49) {
+	if req.X < 0 || req.X > 49 || req.Y < 0 || req.Y > 49 {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
 		return
 	}
 
-	check, err := repo.CanPlaceBuilding(village.ID, req.BuildingId, req.X, req.Y)
+	check, err := repo.CanPlaceBuilding(village.ID, req.BuildingInstanceId, req.X, req.Y)
 	if err != nil {
 		http.Error(w, "Error checking placement", http.StatusInternalServerError)
 		return
@@ -89,7 +89,7 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repo.MoveBuilding(village.ID, req.BuildingId, req.X, req.Y)
+	err = repo.MoveBuilding(village.ID, req.BuildingInstanceId, req.X, req.Y)
 	if err != nil {
 		http.Error(w, "Failed to move building", http.StatusInternalServerError)
 		return
