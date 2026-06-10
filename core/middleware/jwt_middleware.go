@@ -1,13 +1,14 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/auth"
 )
 
-func JWTMiddleware(next http.Handler) http.Handler {
+func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		auth_header := r.Header.Get("Authorization")
@@ -23,12 +24,15 @@ func JWTMiddleware(next http.Handler) http.Handler {
 		}
 
 		token := auth_header[len("Bearer "):]
-		_, err := auth.ValidateToken(token)
+		claims, err := auth.ValidateToken(token)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), "user_id", claims.UserId)
+		ctx = context.WithValue(ctx, "username", claims.Username)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -45,6 +45,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	village_repo := repositories.VillageRepository{
+		DB: db.Conn,
+	}
+	village_id, err := village_repo.CreateVillage(user_id)
+	if err != nil {
+		http.Error(w, "Failed to create village", http.StatusInternalServerError)
+		return
+	}
+
+	err = village_repo.InitialBuildings(village_id)
+	if err != nil {
+		http.Error(w, "Failed to load buildings", http.StatusInternalServerError)
+		return
+	}
+
 	response := models.Register_Response{
 		Message: "Registered successfully",
 		UserId:  user_id,
