@@ -23,7 +23,7 @@ func main() {
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillage))
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.VillageData))
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillageBuildings))
-	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuildings)))
+	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuilding)))
 
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

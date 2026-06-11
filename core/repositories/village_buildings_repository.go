@@ -2,11 +2,30 @@ package repositories
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BuildingMetadata struct {
+	UpgradeCost    int
+	CostType       string
+	UpgradeTimeSec int
+}
+
+type VillageResources struct {
+	Gold   int
+	Elixir int
+}
+
 func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.VillageBuilding, error) {
+	err := r.CompleteUpgrades(village_id)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
 	rows, err := r.DB.Query(ctx,
 		`SELECT id, building_id, level, quantity, upgrade_ends_at, x, y
@@ -152,4 +171,112 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 	return true, nil
 }
 
-func (r *VillageRepository) BuildingUpgrade(village_id, building_id int64) {}
+func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_id int64) error {
+	ctx := context.Background()
+
+	var building_id int64
+	var level int
+	var upgrade_ends_at pgtype.Timestamp
+
+	err := r.DB.QueryRow(ctx,
+		`SELECT building_id, level, upgrade_ends_at
+		FROM buildings_village
+		WHERE id = $1
+		AND village_id = $2`, building_instance_id, village_id).Scan(&building_id, &level, &upgrade_ends_at)
+
+	if err != nil {
+		return err
+	}
+
+	if upgrade_ends_at.Valid {
+		return errors.New("Building already upgrading")
+	}
+
+	if level >= 4 {
+		return errors.New("Max Level")
+	}
+
+	var metadata BuildingMetadata
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT upgrade_cost, cost_type, upgrade_time_sec
+		FROM buildings_metadata
+		WHERE id = $1`,
+		building_id).Scan(&metadata.UpgradeCost, &metadata.CostType, &metadata.UpgradeTimeSec)
+
+	if err != nil {
+		return err
+	}
+
+	var resources VillageResources
+
+	err = r.DB.QueryRow(
+		ctx,
+		`SELECT gold, elixir
+		FROM villages
+		WHERE id = $1`, village_id).Scan(&resources.Gold, &resources.Elixir)
+
+	if err != nil {
+		return err
+	}
+
+	switch metadata.CostType {
+
+	case "Gold":
+
+		if resources.Gold < metadata.UpgradeCost {
+			return errors.New("Not enough gold")
+		}
+
+		_, err = r.DB.Exec(ctx,
+			`UPDATE villages
+			SET gold = gold - $1
+			WHERE id = $2`, metadata.UpgradeCost, village_id)
+
+	case "Elixir":
+
+		if resources.Elixir < metadata.UpgradeCost {
+			return errors.New("Not enough elixir")
+		}
+
+		_, err = r.DB.Exec(ctx,
+			`UPDATE villages
+			SET elixir = elixir - $1
+			WHERE id = $2`, metadata.UpgradeCost, village_id)
+
+	default:
+		return errors.New("Invalid resource type")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	finish_time := time.Now().Add(
+		time.Duration(metadata.UpgradeTimeSec) * time.Second,
+	)
+
+	_, err = r.DB.Exec(
+		ctx,
+		`UPDATE buildings_village
+		SET upgrade_ends_at = $1
+		WHERE id = $2`, finish_time, building_instance_id)
+
+	return err
+}
+
+func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
+
+	ctx := context.Background()
+
+	_, err := r.DB.Exec(ctx,
+		`UPDATE buildings_village
+		SET
+			level = level + 1,
+			upgrade_ends_at = NULL
+		WHERE village_id = $1
+		AND upgrade_ends_at IS NOT NULL
+		AND upgrade_ends_at <= NOW()`, village_id)
+
+	return err
+}
