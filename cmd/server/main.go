@@ -21,8 +21,7 @@ func main() {
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/profile", middleware.JWTMiddleware(controllers.Profile))
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillage))
-	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.VillageData))
-	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillageBuildings))
+	http.HandleFunc("/village/buildings", middleware.JWTMiddleware(controllers.GetVillageBuildings))
 	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuilding)))
 
 	log.Println("Server running on :8080")

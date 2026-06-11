@@ -1,7 +1,7 @@
 CREATE TYPE currency AS ENUM (
     'Gold',
     'Elixir'
-)
+);
 
 CREATE TABLE buildings_metadata (
     id SERIAL PRIMARY KEY,

@@ -15,7 +15,7 @@ type MoveBuildingRequest struct {
 	Y                  int   `json:"y"`
 }
 
-func VillageData(w http.ResponseWriter, r *http.Request) {
+func GetVillage(w http.ResponseWriter, r *http.Request) {
 
 	userId := r.Context().Value("user_id").(int64)
 	repo := repositories.VillageRepository{

@@ -7,13 +7,22 @@ import (
 
 	seed "github.com/anshikagupta17/MVC_Assignment/db/seeds"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/joho/godotenv"
 )
 
 var Conn *pgx.Conn
 
 func InitDB() {
-	db_url := "postgres://anshikagupta@localhost:5432/assignment_mvc?sslmode=disable"
-	log.Println(os.Getenv("DB_URI"))
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
+
+	db_url := os.Getenv("DB_URI")
+	if db_url == "" {
+		log.Fatal("DB_URI not set")
+	}
 
 	conn, err := pgx.Connect(context.Background(), db_url)
 	if err != nil {
@@ -28,8 +37,10 @@ func InitDB() {
 	Conn = conn
 	log.Println("DB connected")
 
-	err = seed.SeedBuildings(Conn)
-	if err != nil {
-		log.Fatal(err)
+	if os.Getenv("SEED_DB") == "true" {
+		err = seed.SeedBuildings(Conn)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

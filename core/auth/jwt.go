@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,7 +14,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-var secret_key = []byte("SecretKey")
+var secret_key = []byte(os.Getenv("JWT_SECRET"))
 
 func GenerateToken(user_id int64, username string) (string, error) {
 	claims := Claims{

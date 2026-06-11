@@ -72,20 +72,3 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-
-func GetVillage(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(village)
-}
