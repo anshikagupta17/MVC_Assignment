@@ -17,7 +17,12 @@ type MoveBuildingRequest struct {
 
 func GetVillage(w http.ResponseWriter, r *http.Request) {
 
-	userId := r.Context().Value("user_id").(int64)
+	userId, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	repo := repositories.VillageRepository{
 		DB: db.Conn,
 	}
@@ -34,7 +39,12 @@ func GetVillage(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetVillageBuildings(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("user_id").(int64)
+	userId, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	repo := repositories.VillageRepository{
 		DB: db.Conn,
 	}
@@ -53,7 +63,11 @@ func GetVillageBuildings(w http.ResponseWriter, r *http.Request) {
 }
 
 func MoveBuilding(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("user_id").(int64)
+	userId, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	repo := repositories.VillageRepository{
 		DB: db.Conn,

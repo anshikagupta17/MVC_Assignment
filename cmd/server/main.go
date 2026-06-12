@@ -23,6 +23,7 @@ func main() {
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillage))
 	http.HandleFunc("/village/buildings", middleware.JWTMiddleware(controllers.GetVillageBuildings))
 	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuilding)))
+	http.Handle("/village/collect", middleware.JWTMiddleware(http.HandlerFunc(controllers.ResourceCollection)))
 
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

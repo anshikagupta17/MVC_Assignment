@@ -5,5 +5,6 @@ CREATE TABLE buildings_village (
     building_id int not null references buildings_metadata(id) on delete cascade,
     upgrade_ends_at timestamp null,
     x int not null default -1,
-    y int not null default -1
+    y int not null default -1,
+    last_updated_at TIMESTAMP DEFAULT NOW()
 );
