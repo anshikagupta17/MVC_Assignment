@@ -15,6 +15,12 @@ type MoveBuildingRequest struct {
 	Y                  int   `json:"y"`
 }
 
+type AddBuildingRequest struct {
+	BuildingID int64 `json:"building_id"`
+	X          int   `json:"x"`
+	Y          int   `json:"y"`
+}
+
 func GetVillage(w http.ResponseWriter, r *http.Request) {
 
 	userId, ok := r.Context().Value("user_id").(int64)
@@ -112,4 +118,61 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Building moved successfully",
 	})
+}
+func VillageState(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	repo := repositories.VillageRepository{
+		DB: db.Conn,
+	}
+	village, err := repo.VillateState(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(village)
+}
+func AddBuilding(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req AddBuildingRequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	repo := repositories.VillageRepository{
+		DB: db.Conn,
+	}
+
+	village, err := repo.GetVillage(userId)
+	if err != nil {
+		http.Error(w, "Village not found", http.StatusNotFound)
+		return
+	}
+
+	err = repo.AddBuilding(
+		village.ID,
+		req.BuildingID,
+		req.X,
+		req.Y,
+	)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }

@@ -114,14 +114,16 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 	if err != nil {
 		return false, err
 	}
+
 	rows, err := r.DB.Query(ctx,
 		`SELECT id, building_id, x, y
-	FROM buildings_village
-	WHERE village_id = $1`, village_id)
+		FROM buildings_village
+		WHERE village_id = $1`, village_id)
 
 	if err != nil {
 		return false, err
 	}
+
 	defer rows.Close()
 
 	newX1 := x
@@ -131,12 +133,12 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 
 	for rows.Next() {
 
-		var instanceID int64
+		var instance_id int64
 		var b_id int
 		var current_x, current_y int
 
 		err := rows.Scan(
-			&instanceID,
+			&instance_id,
 			&b_id,
 			&current_x,
 			&current_y,
@@ -144,7 +146,7 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 		if err != nil {
 			return false, err
 		}
-		if instanceID == building_instance_id {
+		if instance_id == building_instance_id {
 			continue
 		}
 
@@ -171,6 +173,79 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 	return true, nil
 }
 
+func (r *VillageRepository) CanPlaceNewBuilding(village_id int64, building_id int64, x int, y int) (bool, error) {
+	ctx := context.Background()
+	var sizex, sizey int
+
+	err := r.DB.QueryRow(ctx,
+		`SELECT size_x, size_y
+		FROM buildings_metadata
+		WHERE id = $1`, building_id).Scan(&sizex, &sizey)
+
+	if err != nil {
+		return false, err
+	}
+
+	rows, err := r.DB.Query(
+		ctx,
+		`SELECT id, building_id, x, y
+		FROM buildings_village
+		WHERE village_id = $1`, village_id,
+	)
+
+	if err != nil {
+		return false, err
+	}
+
+	defer rows.Close()
+
+	newX1 := x
+	newY1 := y
+	newX2 := x + sizex - 1
+	newY2 := y + sizey - 1
+
+	for rows.Next() {
+
+		var instance_id int64
+		var CurrentBuildingId int64
+		var current_x, current_y int
+
+		err := rows.Scan(
+			&instance_id,
+			&CurrentBuildingId,
+			&current_x,
+			&current_y,
+		)
+
+		if err != nil {
+			return false, err
+		}
+
+		var current_size_x, current_size_y int
+
+		err = r.DB.QueryRow(ctx,
+			`SELECT size_x, size_y
+			FROM buildings_metadata
+			WHERE id = $1`, CurrentBuildingId).Scan(&current_size_x, &current_size_y)
+
+		if err != nil {
+			return false, err
+		}
+
+		currentX1 := current_x
+		currentY1 := current_y
+		currentX2 := current_x + current_size_x - 1
+		currentY2 := current_y + current_size_y - 1
+
+		if !(newX2 < currentX1 || newX1 > currentX2 || newY2 < currentY1 || newY1 > currentY2) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+
+}
+
 func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_id int64) error {
 	ctx := context.Background()
 
@@ -190,6 +265,23 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 
 	if upgrade_ends_at.Valid {
 		return errors.New("Building already upgrading")
+	}
+	var upgradingCount int
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT COUNT(*)
+		FROM buildings_village
+		WHERE village_id = $1
+		AND upgrade_ends_at IS NOT NULL`,
+		village_id,
+	).Scan(&upgradingCount)
+
+	if err != nil {
+		return err
+	}
+
+	if upgradingCount > 0 {
+		return errors.New("another building is already upgrading")
 	}
 
 	if level >= 4 {
@@ -220,6 +312,12 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
 	switch metadata.CostType {
 
 	case "Gold":
@@ -228,7 +326,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 			return errors.New("Not enough gold")
 		}
 
-		_, err = r.DB.Exec(ctx,
+		_, err = tx.Exec(ctx,
 			`UPDATE villages
 			SET gold = gold - $1
 			WHERE id = $2`, metadata.UpgradeCost, village_id)
@@ -239,7 +337,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 			return errors.New("Not enough elixir")
 		}
 
-		_, err = r.DB.Exec(ctx,
+		_, err = tx.Exec(ctx,
 			`UPDATE villages
 			SET elixir = elixir - $1
 			WHERE id = $2`, metadata.UpgradeCost, village_id)
@@ -256,20 +354,24 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		time.Duration(metadata.UpgradeTimeSec) * time.Second,
 	)
 
-	_, err = r.DB.Exec(
+	_, err = tx.Exec(
 		ctx,
 		`UPDATE buildings_village
 		SET upgrade_ends_at = $1
 		WHERE id = $2`, finish_time, building_instance_id)
 
-	return err
+	return tx.Commit(ctx)
 }
 
 func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 
 	ctx := context.Background()
-
-	_, err := r.DB.Exec(ctx,
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	_, err = r.DB.Exec(ctx,
 		`UPDATE buildings_village
 		SET
 			level = level + 1,
@@ -278,5 +380,177 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 		AND upgrade_ends_at IS NOT NULL
 		AND upgrade_ends_at <= NOW()`, village_id)
 
-	return err
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func isDefense(id int64) bool {
+	switch id {
+	case 2, 3, 4, 5:
+		return true
+	default:
+		return false
+	}
+}
+
+func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x int, y int) error {
+	ctx := context.Background()
+	var townhall_level int
+
+	err := r.DB.QueryRow(ctx,
+		`SELECT townhall_level
+		FROM villages
+		WHERE id = $1`, village_id).Scan(&townhall_level)
+
+	if err != nil {
+		return err
+	}
+
+	var cost int
+	var costType string
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT upgrade_cost, cost_type
+		FROM buildings_metadata
+		WHERE id = $1`, building_id).Scan(&cost, &costType)
+
+	if err != nil {
+		return err
+	}
+
+	if isDefense(building_id) {
+
+		var unlock_level int
+
+		err = r.DB.QueryRow(ctx,
+			`SELECT unlock_level
+			FROM defense_metadata
+			WHERE type_id = $1 AND level = 1`, building_id).Scan(&unlock_level)
+
+		if err != nil {
+			return err
+		}
+
+		if townhall_level < unlock_level {
+			return errors.New("Building locked")
+		}
+	}
+
+	var max_quantity int
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT max_quantity
+		FROM building_limits
+		WHERE building_id = $1
+		AND townhall_level = $2`, building_id, townhall_level).Scan(&max_quantity)
+
+	if err != nil {
+		return err
+	}
+
+	var current_quantity int
+	var last_collected pgtype.Timestamp
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT COUNT(*), last_collected_at
+		FROM buildings_village
+		WHERE village_id = $1
+		AND building_id = $2`, village_id, building_id).Scan(&current_quantity, &last_collected)
+
+	if err != nil {
+		return err
+	}
+
+	if current_quantity >= max_quantity {
+		return errors.New("max quantity reached")
+	}
+
+	canPlace, err := r.CanPlaceNewBuilding(village_id, building_id, x, y)
+
+	if err != nil {
+		return err
+	}
+
+	if !canPlace {
+		return errors.New("invalid placement")
+	}
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if costType == "Gold" {
+
+		cmd, err := tx.Exec(ctx,
+			`UPDATE villages
+			SET gold = gold - $1
+			WHERE id = $2
+			AND gold >= $1`, cost, village_id)
+
+		if err != nil {
+			return err
+		}
+
+		if cmd.RowsAffected() == 0 {
+			return errors.New("Not enough gold")
+		}
+	}
+
+	if costType == "Elixir" {
+
+		cmd, err := tx.Exec(ctx,
+			`UPDATE villages
+			SET elixir = elixir - $1
+			WHERE id = $2 AND elixir >= $1`, cost, village_id)
+
+		if err != nil {
+			return err
+		}
+
+		if cmd.RowsAffected() == 0 {
+			return errors.New("Not enough elixir")
+		}
+	}
+
+	if building_id == 6 || building_id == 7 {
+
+		_, err = tx.Exec(
+			ctx,
+			`INSERT INTO buildings_village
+			(
+				village_id,
+				building_id,
+				level,
+				x,
+				y,
+				last_collected_at
+			)
+			VALUES
+			($1,$2,1,$3,$4,NOW())`,
+			village_id,
+			building_id,
+			x,
+			y,
+		)
+
+	} else {
+
+		_, err = tx.Exec(
+			ctx,
+			`INSERT INTO buildings_village
+			(village_id,building_id,level,x,y)
+			VALUES
+			($1,$2,1,$3,$4)`, village_id, building_id, x, y)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+
 }

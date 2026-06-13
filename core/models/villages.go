@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type Village struct {
@@ -21,9 +22,10 @@ type VillageBuilding struct {
 	BuildingId    int64
 	Level         int64
 	Quantity      int64
-	UpgradeEndsAt int64
+	UpgradeEndsAt *time.Time
 	X             int64
 	Y             int64
+	LastUpdate    *time.Time
 }
 
 type BuildingMetadata struct {
@@ -34,4 +36,13 @@ type BuildingMetadata struct {
 	UpgradeCost    int64
 	CostType       string
 	UpgradeTimeSec int64
+}
+
+type VillageResponse struct {
+	ID            int64             `json:"id"`
+	Gold          int               `json:"gold"`
+	Elixir        int               `json:"elixir"`
+	TownhallLevel int               `json:"townhall_level"`
+	Layout        json.RawMessage   `json:"layout"`
+	Buildings     []VillageBuilding `json:"buildings"`
 }

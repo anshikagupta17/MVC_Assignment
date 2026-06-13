@@ -1,0 +1,2 @@
+ALTER TABLE buildings_village
+DROP COLUMN last_collected_at;

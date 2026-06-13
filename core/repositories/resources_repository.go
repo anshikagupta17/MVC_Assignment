@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CollectedResources struct {
@@ -35,15 +36,18 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 	defer rows.Close()
 
 	var mines []models.Mine
+	now := time.Now()
 
 	for rows.Next() {
 		var m models.Mine
+
+		var lastCollected pgtype.Timestamp
 
 		err := rows.Scan(
 			&m.ID,
 			&m.Level,
 			&m.BuildingId,
-			&m.LastCollected,
+			&lastCollected,
 			&m.UpgradeEndsAt,
 			&m.TypeId,
 			&m.ProductionRate,
@@ -51,12 +55,15 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		if err != nil {
 			return CollectedResources{}, err
 		}
-
+		if lastCollected.Valid {
+			m.LastCollected = lastCollected.Time
+		} else {
+			m.LastCollected = now
+		}
 		mines = append(mines, m)
 
 	}
 
-	now := time.Now()
 	new_gold := 0
 	new_elixir := 0
 	for _, m := range mines {
@@ -77,9 +84,6 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		case 7:
 			new_elixir += gain
 		}
-	}
-	if new_gold == 0 && new_elixir == 0 {
-		return CollectedResources{}, nil
 	}
 	s_rows, err := r.DB.Query(ctx,
 		`SELECT b.building_id,
@@ -159,6 +163,14 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		return CollectedResources{}, err
 	}
 
+	err = tx.Commit(ctx)
+	if err != nil {
+		return CollectedResources{}, err
+	}
+
+	if tx.Commit(ctx) != nil {
+		return CollectedResources{}, tx.Commit(ctx)
+	}
 	return CollectedResources{
 		Gold:   new_gold,
 		Elixir: new_elixir}, tx.Commit(ctx)
