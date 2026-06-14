@@ -39,7 +39,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = models.CheckPass(req.Password, user.PassWord)
+	err = auth.CheckPass(req.Password, user.PassWord)
 	if err != nil {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return

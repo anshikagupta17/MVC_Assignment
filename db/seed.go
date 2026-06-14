@@ -26,6 +26,20 @@ func SeedAll(conn *pgx.Conn) error {
 	if err := seed.SeedArmy(conn); err != nil {
 		return err
 	}
+	if err := seed.SeedLimits(conn); err != nil {
+		return err
+	}
+
+	if err := seed.SeedTestUsers(conn); err != nil {
+		return err
+	}
+
+	if err := seed.SeedTroops(conn); err != nil {
+		return err
+	}
+	if err := seed.SeedTroopsLevel(conn); err != nil {
+		return err
+	}
 
 	return nil
 }

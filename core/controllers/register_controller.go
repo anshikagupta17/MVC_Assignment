@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/anshikagupta17/MVC_Assignment/core/auth"
 	db "github.com/anshikagupta17/MVC_Assignment/core/database"
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
 	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
@@ -27,7 +28,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash_pass, err := models.HashPass(req.Password)
+	hash_pass, err := auth.HashPass(req.Password)
 
 	if err != nil {
 		http.Error(w, "Failed to process password", http.StatusInternalServerError)
