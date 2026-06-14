@@ -251,7 +251,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 
 	var building_id int64
 	var level int
-	var upgrade_ends_at pgtype.Timestamp
+	var upgrade_ends_at *time.Time
 
 	err := r.DB.QueryRow(ctx,
 		`SELECT building_id, level, upgrade_ends_at
@@ -263,18 +263,18 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
-	if upgrade_ends_at.Valid {
+	if upgrade_ends_at != nil {
 		return errors.New("Building already upgrading")
 	}
-	var upgradingCount int
+	var upgradingCount, building_level int
 
 	err = r.DB.QueryRow(ctx,
-		`SELECT COUNT(*)
+		`SELECT COUNT(*),level
 		FROM buildings_village
 		WHERE village_id = $1
 		AND upgrade_ends_at IS NOT NULL`,
 		village_id,
-	).Scan(&upgradingCount)
+	).Scan(&upgradingCount, &building_level)
 
 	if err != nil {
 		return err
@@ -284,8 +284,8 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return errors.New("another building is already upgrading")
 	}
 
-	if level >= 4 {
-		return errors.New("Max Level")
+	if level >= building_level {
+		return errors.New("Building at max upgrade level ")
 	}
 
 	var metadata BuildingMetadata

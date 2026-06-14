@@ -20,12 +20,21 @@ func main() {
 	http.HandleFunc("/register", controllers.Register)
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/profile", middleware.JWTMiddleware(controllers.Profile))
+
 	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillage))
+	http.HandleFunc("/village/state", middleware.JWTMiddleware(http.HandlerFunc(controllers.VillageState)))
+
 	http.HandleFunc("/village/buildings", middleware.JWTMiddleware(controllers.GetVillageBuildings))
 	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuilding)))
-	http.Handle("/village/collect", middleware.JWTMiddleware(http.HandlerFunc(controllers.ResourceCollection)))
-	http.HandleFunc("/village/state", middleware.JWTMiddleware(http.HandlerFunc(controllers.VillageState)))
 	http.Handle("/village/buildings/build", middleware.JWTMiddleware(http.HandlerFunc(controllers.AddBuilding)))
+
+	http.Handle("/village/collect", middleware.JWTMiddleware(http.HandlerFunc(controllers.ResourceCollection)))
+
+	http.Handle("/village/troops", middleware.JWTMiddleware(http.HandlerFunc(controllers.GetVillageTroops)))
+	http.Handle("/village/buildings/upgrade", middleware.JWTMiddleware(http.HandlerFunc(controllers.UpgradeBuilding)))
+	http.Handle("/village/troops/upgrade", middleware.JWTMiddleware(http.HandlerFunc(controllers.UpgradeTroops)))
+
+	http.Handle("/battle/matchmake", middleware.JWTMiddleware(http.HandlerFunc(controllers.FindOpponent)))
 
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

@@ -77,6 +77,10 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
+	err = r.CompleteTroopUpgrades(village.ID)
+	if err != nil {
+		return models.VillageResponse{}, err
+	}
 	rows, err := r.DB.Query(ctx,
 		`SELECT id, building_id, level, upgrade_ends_at, quantity, x, y
 		 FROM buildings_village

@@ -6,20 +6,9 @@ import (
 	"encoding/json"
 
 	db "github.com/anshikagupta17/MVC_Assignment/core/database"
+	"github.com/anshikagupta17/MVC_Assignment/core/models"
 	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
-
-type MoveBuildingRequest struct {
-	BuildingInstanceId int64 `json:"building_instance_id"`
-	X                  int   `json:"x"`
-	Y                  int   `json:"y"`
-}
-
-type AddBuildingRequest struct {
-	BuildingID int64 `json:"building_id"`
-	X          int   `json:"x"`
-	Y          int   `json:"y"`
-}
 
 func GetVillage(w http.ResponseWriter, r *http.Request) {
 
@@ -85,7 +74,7 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req MoveBuildingRequest
+	var req models.MoveBuildingRequest
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -144,7 +133,7 @@ func AddBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req AddBuildingRequest
+	var req models.AddBuildingRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -175,4 +164,66 @@ func AddBuilding(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+func GetVillageTroops(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	repo := repositories.VillageRepository{
+		DB: db.Conn,
+	}
+
+	village, err := repo.GetVillage(userID)
+	if err != nil {
+		http.Error(w, "village not found", http.StatusNotFound)
+		return
+	}
+
+	troops, err := repo.GetVillageTroops(village.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(troops)
+}
+
+func UpgradeBuilding(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value("user_id").(int64)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req models.UpgradeBuildingRequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	repo := repositories.VillageRepository{
+		DB: db.Conn,
+	}
+
+	village, err := repo.GetVillage(userID)
+	if err != nil {
+		http.Error(w, "village not found", http.StatusNotFound)
+		return
+	}
+
+	err = repo.BuildingUpgrade(village.ID, req.BuildingInstanceID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
