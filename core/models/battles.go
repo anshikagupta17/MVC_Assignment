@@ -17,3 +17,14 @@ type MatchmakingResult struct {
 	Gold          int   `json:"gold"`
 	Elixir        int   `json:"elixir"`
 }
+
+type BattleResult struct {
+	Stars             int  `json:"stars"`
+	Destruction       int  `json:"destruction"`
+	TownhallDestroyed bool `json:"townhall_destroyed"`
+
+	LootGold   int `json:"loot_gold"`
+	LootElixir int `json:"loot_elixir"`
+
+	TrophyChange int `json:"trophy_change"`
+}

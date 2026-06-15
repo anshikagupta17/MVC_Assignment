@@ -3,7 +3,7 @@ package seed
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type TestVillage struct {
@@ -12,7 +12,7 @@ type TestVillage struct {
 	HousingSpace  int
 }
 
-func SeedTestVillages(conn *pgx.Conn) error {
+func SeedTestVillages(conn *pgxpool.Pool) error {
 	ctx := context.Background()
 
 	rows, err := conn.Query(ctx,
@@ -94,7 +94,7 @@ func SeedTestVillages(conn *pgx.Conn) error {
 			$3,
 			$4,
 			$5
-		)`, userID, village.TownhallLevel, village.HousingSpace, village.Trophies, `{}`)
+		)`, userID, village.TownhallLevel, village.HousingSpace, village.Trophies, "{}")
 
 		if err != nil {
 			return err

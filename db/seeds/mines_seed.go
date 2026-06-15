@@ -3,10 +3,10 @@ package seed
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SeedMines(conn *pgx.Conn) error {
+func SeedMines(conn *pgxpool.Pool) error {
 	ctx := context.Background()
 
 	var count int
@@ -33,7 +33,7 @@ func SeedMines(conn *pgx.Conn) error {
 	(7, 1, 0.05),
 	(7, 2, 0.1),
 	(7, 3, 0.15),
-	(7, 4, 0.2),
+	(7, 4, 0.2);
 	`)
 
 	return err

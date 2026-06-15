@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"github.com/anshikagupta17/MVC_Assignment/db"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/joho/godotenv"
 )
 
-var Conn *pgx.Conn
+var Conn *pgxpool.Pool
 
 func InitDB() {
 	err := godotenv.Load()
@@ -24,7 +24,7 @@ func InitDB() {
 		log.Fatal("DB_URI not set")
 	}
 
-	conn, err := pgx.Connect(context.Background(), db_url)
+	conn, err := pgxpool.New(context.Background(), db_url)
 	if err != nil {
 		log.Fatal("DB connection failed:", err)
 	}

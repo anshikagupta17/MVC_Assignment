@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/auth"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SeedTestUsers(conn *pgx.Conn) error {
+func SeedTestUsers(conn *pgxpool.Pool) error {
 	ctx := context.Background()
 
 	password_hash, err := auth.HashPass("Assignment4")

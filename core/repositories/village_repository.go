@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type VillageRepository struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }
 
 func (r *VillageRepository) CreateVillage(user_id int64) (int64, error) {
@@ -82,11 +82,9 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 		return models.VillageResponse{}, err
 	}
 	rows, err := r.DB.Query(ctx,
-		`SELECT id, building_id, level, upgrade_ends_at, quantity, x, y
-		 FROM buildings_village
-		 WHERE village_id = $1`,
-		village.ID,
-	)
+		`SELECT id, building_id, level, upgrade_ends_at, x, y
+     FROM buildings_village
+     WHERE village_id = $1`, village.ID)
 
 	if err != nil {
 		return village, err
@@ -101,7 +99,6 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 			&b.BuildingId,
 			&b.Level,
 			&b.UpgradeEndsAt,
-			&b.Quantity,
 			&b.X,
 			&b.Y,
 		)

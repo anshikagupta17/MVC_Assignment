@@ -12,3 +12,8 @@ type VillageTroop struct {
 type UpgradeTroopRequest struct {
 	TroopID int `json:"troop_id"`
 }
+
+type TrainTroopsRequest struct {
+	TroopID  int64 `json:"troop_id"`
+	Quantity int   `json:"quantity"`
+}

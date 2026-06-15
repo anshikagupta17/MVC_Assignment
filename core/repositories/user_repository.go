@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserRepository struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }
 
 func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error) {
@@ -17,10 +17,7 @@ func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error)
 	err := r.DB.QueryRow(ctx,
 		`INSERT INTO users (username, pass_hash)
 		 VALUES ($1, $2)
-		 RETURNING id`,
-		username,
-		hashed_pass,
-	).Scan(&id)
+		 RETURNING id`, username, hashed_pass).Scan(&id)
 
 	if err != nil {
 		return 0, err

@@ -35,3 +35,5 @@ func FindOpponent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(opponent)
 }
+
+func AttackVillage(w http.ResponseWriter, r *http.Request)

@@ -85,10 +85,42 @@ func (r *VillageRepository) ValidateArmy(village_id int64, deployedTroops []mode
 	return nil
 }
 
-func (r *VillageRepository) CalculateAttackPower(village_id int64, deployedTroops []models.AttackTroop) (int, error)
+func (r *VillageRepository) CalculateAttackPower(village_id int64, deployed_troops []models.AttackTroop) (int, error) {
+	ctx := context.Background()
 
-func (r *VillageRepository) CalculateDefensePower(village_id int64) (int, error)
+	totalPower := 0
 
-func (r *VillageRepository) CalculateDestruction(defender_village_id int64, attack_power int) (int, bool, error)
+	for _, troop := range deployed_troops {
+		var level int
 
-func CalculateBattleResult(destruction int, townhall_destroyed bool, defender_gold, defender_elixir int) (stars, loot_gold, loot_elixir, trophy_change int)
+		err := r.DB.QueryRow(
+			ctx,
+			`SELECT level
+			FROM troops_village
+			WHERE village_id = $1
+			AND troops_id = $2`, village_id, troop.TroopID).Scan(&level)
+
+		if err != nil {
+			return 0, err
+		}
+
+		var damage int
+		var health int
+
+		err = r.DB.QueryRow(
+			ctx,
+			`SELECT damage, max_health
+			FROM troops_level_metadata
+			WHERE type_id = $1 AND level = $2`, troop.TroopID, level).Scan(&damage, &health)
+
+		if err != nil {
+			return 0, err
+		}
+
+		powerPerTroop := damage + (health / 2)
+
+		totalPower += powerPerTroop * troop.Quantity
+	}
+
+	return totalPower, nil
+}

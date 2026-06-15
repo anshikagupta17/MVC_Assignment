@@ -9,7 +9,7 @@ type Mine struct {
 	BuildingId     int64
 	Level          int
 	TypeId         int64
-	ProductionRate int
+	ProductionRate float64
 	LastCollected  time.Time
 	UpgradeEndsAt  *time.Time
 }

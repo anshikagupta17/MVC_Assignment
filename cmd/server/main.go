@@ -38,6 +38,7 @@ func Routes() {
 
 	// Troops
 	http.Handle("/village/troops", middleware.JWTMiddleware(http.HandlerFunc(controllers.GetVillageTroops)))
+	http.Handle("/village/troops/train", middleware.JWTMiddleware(http.HandlerFunc(controllers.TrainTroops)))
 	http.Handle("/village/troops/upgrade", middleware.JWTMiddleware(http.HandlerFunc(controllers.UpgradeTroops)))
 
 	// Battle

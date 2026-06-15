@@ -3,10 +3,10 @@ package seed
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SeedLimits(conn *pgx.Conn) error {
+func SeedLimits(conn *pgxpool.Pool) error {
 	ctx := context.Background()
 
 	var count int

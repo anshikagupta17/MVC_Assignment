@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
@@ -28,7 +29,7 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 
 	ctx := context.Background()
 	rows, err := r.DB.Query(ctx,
-		`SELECT id, building_id, level, quantity, upgrade_ends_at, x, y
+		`SELECT id, building_id, level, upgrade_ends_at, x, y
 		From buildings_village
 		WHERE village_id= $1`, village_id)
 	if err != nil {
@@ -38,12 +39,13 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 	var result []models.VillageBuilding
 	for rows.Next() {
 		var building models.VillageBuilding
+		var upgradeEndsAt pgtype.Timestamp
+
 		err := rows.Scan(
 			&building.ID,
 			&building.BuildingId,
 			&building.Level,
-			&building.Quantity,
-			&building.UpgradeEndsAt,
+			&upgradeEndsAt,
 			&building.X,
 			&building.Y,
 		)
@@ -52,11 +54,15 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 			return nil, err
 		}
 
+		if upgradeEndsAt.Valid {
+			t := upgradeEndsAt.Time
+			building.UpgradeEndsAt = &t
+		}
+
 		result = append(result, building)
 	}
 	return result, nil
 }
-
 func (r *VillageRepository) InitialBuildings(village_id int64) error {
 	ctx := context.Background()
 	_, err := r.DB.Exec(ctx,
@@ -251,7 +257,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 
 	var building_id int64
 	var level int
-	var upgrade_ends_at *time.Time
+	var upgrade_ends_at pgtype.Timestamp
 
 	err := r.DB.QueryRow(ctx,
 		`SELECT building_id, level, upgrade_ends_at
@@ -263,29 +269,39 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
-	if upgrade_ends_at != nil {
+	if upgrade_ends_at.Valid {
 		return errors.New("Building already upgrading")
 	}
-	var upgradingCount, building_level int
 
+	var upgradingCount int
 	err = r.DB.QueryRow(ctx,
-		`SELECT COUNT(*),level
-		FROM buildings_village
-		WHERE village_id = $1
-		AND upgrade_ends_at IS NOT NULL`,
-		village_id,
-	).Scan(&upgradingCount, &building_level)
+		`SELECT COUNT(*)
+    	FROM buildings_village
+    	WHERE village_id = $1
+    	AND upgrade_ends_at IS NOT NULL`, village_id).Scan(&upgradingCount)
 
 	if err != nil {
 		return err
 	}
 
 	if upgradingCount > 0 {
-		return errors.New("another building is already upgrading")
+		return errors.New("Another building is already upgrading")
 	}
 
-	if level >= building_level {
-		return errors.New("Building at max upgrade level ")
+	var townhall_level int
+	err = r.DB.QueryRow(ctx,
+		`SELECT townhall_level
+		FROM villages
+		WHERE id = $1`, village_id).Scan(&townhall_level)
+
+	log.Println("village_id:", village_id, "building_instance_id:", building_instance_id)
+
+	if err != nil {
+		return err
+	}
+
+	if level+1 > townhall_level {
+		return errors.New("building cannot exceed townhall level")
 	}
 
 	var metadata BuildingMetadata
@@ -371,7 +387,7 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-	_, err = r.DB.Exec(ctx,
+	_, err = tx.Exec(ctx,
 		`UPDATE buildings_village
 		SET
 			level = level + 1,
@@ -451,13 +467,12 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 	}
 
 	var current_quantity int
-	var last_collected pgtype.Timestamp
 
 	err = r.DB.QueryRow(ctx,
-		`SELECT COUNT(*), last_collected_at
+		`SELECT COUNT(*)
 		FROM buildings_village
 		WHERE village_id = $1
-		AND building_id = $2`, village_id, building_id).Scan(&current_quantity, &last_collected)
+		AND building_id = $2`, village_id, building_id).Scan(&current_quantity)
 
 	if err != nil {
 		return err
@@ -518,24 +533,10 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	if building_id == 6 || building_id == 7 {
 
-		_, err = tx.Exec(
-			ctx,
+		_, err = tx.Exec(ctx,
 			`INSERT INTO buildings_village
-			(
-				village_id,
-				building_id,
-				level,
-				x,
-				y,
-				last_collected_at
-			)
-			VALUES
-			($1,$2,1,$3,$4,NOW())`,
-			village_id,
-			building_id,
-			x,
-			y,
-		)
+    	(village_id, building_id, level, x, y, last_collected_at)
+    	VALUES ($1,$2,1,$3,$4,NOW())`, village_id, building_id, x, y)
 
 	} else {
 

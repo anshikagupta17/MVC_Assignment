@@ -21,7 +21,6 @@ type VillageBuilding struct {
 	VillageId     int64
 	BuildingId    int64
 	Level         int64
-	Quantity      int64
 	UpgradeEndsAt *time.Time
 	X             int64
 	Y             int64

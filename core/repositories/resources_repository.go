@@ -76,7 +76,7 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 			continue
 		}
 
-		gain := m.ProductionRate * sec
+		gain := int(m.ProductionRate * float64(sec))
 		switch m.TypeId {
 		case 6:
 			new_gold += gain
@@ -168,10 +168,7 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		return CollectedResources{}, err
 	}
 
-	if tx.Commit(ctx) != nil {
-		return CollectedResources{}, tx.Commit(ctx)
-	}
 	return CollectedResources{
 		Gold:   new_gold,
-		Elixir: new_elixir}, tx.Commit(ctx)
+		Elixir: new_elixir}, nil
 }
