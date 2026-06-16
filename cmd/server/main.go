@@ -43,6 +43,7 @@ func Routes() {
 
 	// Battle
 	http.Handle("/battle/matchmake", middleware.JWTMiddleware(http.HandlerFunc(controllers.FindOpponent)))
+	http.Handle("/battle/attack", middleware.JWTMiddleware(http.HandlerFunc(controllers.AttackVillage)))
 }
 
 func main() {

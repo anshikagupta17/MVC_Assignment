@@ -19,9 +19,9 @@ type MatchmakingResult struct {
 }
 
 type BattleResult struct {
-	Stars             int  `json:"stars"`
-	Destruction       int  `json:"destruction"`
-	TownhallDestroyed bool `json:"townhall_destroyed"`
+	Stars                 int  `json:"stars"`
+	DestructionPercentage int  `json:"destruction"`
+	TownhallDestroyed     bool `json:"townhall_destroyed"`
 
 	LootGold   int `json:"loot_gold"`
 	LootElixir int `json:"loot_elixir"`
