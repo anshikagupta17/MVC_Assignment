@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -93,15 +94,21 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 
 	for rows.Next() {
 		var b models.VillageBuilding
+		var UpgradeEndsAt pgtype.Timestamp
 
 		err := rows.Scan(
 			&b.ID,
 			&b.BuildingId,
 			&b.Level,
-			&b.UpgradeEndsAt,
+			&UpgradeEndsAt,
 			&b.X,
 			&b.Y,
 		)
+
+		if UpgradeEndsAt.Valid {
+			t := UpgradeEndsAt.Time
+			b.UpgradeEndsAt = &t
+		}
 
 		if err != nil {
 			return village, err

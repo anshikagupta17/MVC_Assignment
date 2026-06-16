@@ -168,6 +168,10 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	FROM villages
 	WHERE id=$1`, village_id).Scan(&townhall_level, &elixir)
 
+	if err != nil {
+		return err
+	}
+
 	if level >= townhall_level {
 		return errors.New("Troop at max upgrade level")
 	}
