@@ -9,6 +9,7 @@ export default function VillagePage() {
     const [loading, setLoading] = useState(true);
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [now, setNow] = useState(Date.now());
+    
 
     async function fetchVillage() {
         try {
@@ -50,6 +51,49 @@ export default function VillagePage() {
     if (!village) {
         console.log(village);
         return <div className="p-6">No village found</div>;
+    }
+
+        async function upgradeBuilding() {
+        if (!selectedBuilding) return;
+
+        try {
+            const res = await apiFetch("/village/buildings/upgrade", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    building_instance_id: selectedBuilding.id,
+                }),
+            });
+            console.log(res.status);
+
+            const text = await res.text();
+            console.log(text);
+
+            if (!res.ok) {
+                throw new Error(text);
+            }
+
+            await fetchVillage();
+
+            alert("Upgrade started");
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+
+    function getRemainingTime(endTime) {
+        const diff = new Date(endTime) - new Date();
+
+        if (diff <= 0) return null;
+
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remSeconds = seconds % 60;
+
+        return `${minutes}m ${remSeconds}s`;
     }
 
     return (
@@ -152,47 +196,6 @@ export default function VillagePage() {
         </div>
     );
 
-    async function upgradeBuilding() {
-        if (!selectedBuilding) return;
 
-        try {
-            const res = await apiFetch("/village/buildings/upgrade", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    building_instance_id: selectedBuilding.id,
-                }),
-            });
-            console.log(res.status);
-
-            const text = await res.text();
-            console.log(text);
-
-            if (!res.ok) {
-                throw new Error(text);
-            }
-
-            await fetchVillage();
-
-            alert("Upgrade started");
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    }
-
-    function getRemainingTime(endTime) {
-        const diff = new Date(endTime) - new Date();
-
-        if (diff <= 0) return null;
-
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remSeconds = seconds % 60;
-
-        return `${minutes}m ${remSeconds}s`;
-    }
 
 }
