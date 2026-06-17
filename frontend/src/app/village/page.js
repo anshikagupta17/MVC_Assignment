@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/services/api";
+import { BUILDING_NAMES } from "@/constants/buildings";
 
 export default function VillagePage() {
-    console.log("VillagePage rendered");
     const [village, setVillage] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [selectedBuilding, setSelectedBuilding] = useState(null);
+    const [now, setNow] = useState(Date.now());
 
     async function fetchVillage() {
         try {
         const res = await apiFetch("/village");
         const data = await res.json();
-        console.log("DATA FROM API:", data);
 
         if (!res.ok) {
             throw new Error(data.message || "Failed to fetch village");
@@ -32,6 +33,14 @@ export default function VillagePage() {
 
     useEffect(() => {
         fetchVillage();
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
@@ -62,37 +71,128 @@ export default function VillagePage() {
             </div>
            
             <div className="border p-4">
-            <h2 className="text-xl font-semibold mb-3">
-                Buildings
-            </h2>
+                <h2 className="text-xl font-semibold mb-4">
+                    Village Layout
+                </h2>
 
-            {village.buildings && village.buildings.length > 0 ? (
-                <div className="space-y-2">
-                {village.buildings.map((b) => (
-                    <div key={b.id} className="border p-2">
-                    <p>
-                        Building ID: {b.building_id}
-                    </p>
-                    <p>
-                        Level: {b.level}
-                    </p>
-                    <p>
-                        Position: ({b.x}, {b.y})
-                    </p>
-                    <p>
-                        Upgrading:{" "}
-                        {b.upgrade_ends_at
-                        ? "Yes"
-                        : "No"}
-                    </p>
+                <div className="relative w-[600px] h-[600px] border bg-[#3F704D] overflow-hidden">
+
+                    {village.buildings?.map((b) => (
+                    <div
+                        key={b.id}
+                        onClick={() => setSelectedBuilding(b)}
+                        className={`absolute w-16 h-16 border flex flex-col items-center justify-center text-xs text-center shadow cursor-pointer hover:scale-105 transition
+                            ${b.upgrade_ends_at ? "opacity-60 border-red-400" : "bg-black"}
+                        `}
+                        style={{
+                            left: `${b.x * 20}px`,
+                            top: `${b.y * 20}px`,
+                        }}
+                    >
+                        <div>
+                        {BUILDING_NAMES[b.building_id]}
+                        </div>
+                        
+
+                        <div>
+                        <div>
+                            Lv {b.level}
+                        </div>
+
+                        {b.upgrade_ends_at && (
+                            <div className="text-red-500">
+                                {getRemainingTime(b.upgrade_ends_at)}
+                            </div>
+                        )}
+                        </div>
                     </div>
-                ))}
+                    ))}
+
                 </div>
-            ) : (
-                <p>No buildings found</p>
-            )}
+                {selectedBuilding && (
+                    <div className="border p-4 mt-4 space-y-2">
+                        <h2 className="text-xl font-semibold">
+                            Building Details
+                        </h2>
+
+                        <p>
+                            Name: {BUILDING_NAMES[selectedBuilding.building_id]}
+                        </p>
+
+                        <p>
+                            Level: {selectedBuilding.level}
+                        </p>
+
+                        <p>
+                            Building ID: {selectedBuilding.id}
+                        </p>
+
+                        <p>
+                            Position:
+                            ({selectedBuilding.x}, {selectedBuilding.y})
+                        </p>
+
+                        <p>
+                            Upgrade Status:
+                            {selectedBuilding.upgrade_ends_at
+                                ? " Upgrading"
+                                : " Idle"}
+                        </p>
+
+                        <button
+                            onClick={upgradeBuilding}
+                            className="border px-4 py-2"
+                        >
+                            Upgrade
+                        </button>
+                    </div>
+                )}
             </div>
 
-                    </div>
+        </div>
     );
+
+    async function upgradeBuilding() {
+        if (!selectedBuilding) return;
+
+        try {
+            const res = await apiFetch("/village/buildings/upgrade", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    building_instance_id: selectedBuilding.id,
+                }),
+            });
+            console.log(res.status);
+
+            const text = await res.text();
+            console.log(text);
+
+            if (!res.ok) {
+                throw new Error(text);
+            }
+
+            await fetchVillage();
+
+            alert("Upgrade started");
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+
+    function getRemainingTime(endTime) {
+        const diff = new Date(endTime) - new Date();
+
+        if (diff <= 0) return null;
+
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remSeconds = seconds % 60;
+
+        return `${minutes}m ${remSeconds}s`;
+    }
+
 }
