@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -86,13 +87,17 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 		`SELECT id, building_id, level, upgrade_ends_at, x, y
      FROM buildings_village
      WHERE village_id = $1`, village.ID)
+	fmt.Println("Village ID:", village.ID)
 
 	if err != nil {
 		return village, err
 	}
 	defer rows.Close()
 
+	count := 0
+
 	for rows.Next() {
+		count++
 		var b models.VillageBuilding
 		var UpgradeEndsAt pgtype.Timestamp
 
@@ -116,6 +121,8 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 
 		village.Buildings = append(village.Buildings, b)
 	}
+
+	fmt.Println("Buildings found:", count)
 
 	return village, rows.Err()
 

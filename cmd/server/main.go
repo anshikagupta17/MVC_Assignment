@@ -24,8 +24,7 @@ func Routes() {
 	http.HandleFunc("/profile", middleware.JWTMiddleware(controllers.Profile))
 
 	// Village
-	http.HandleFunc("/village", middleware.JWTMiddleware(controllers.GetVillage))
-	http.HandleFunc("/village/state", middleware.JWTMiddleware(http.HandlerFunc(controllers.VillageState)))
+	http.HandleFunc("/village", middleware.JWTMiddleware(http.HandlerFunc(controllers.VillageState)))
 
 	// Buildings
 	http.HandleFunc("/village/buildings", middleware.JWTMiddleware(controllers.GetVillageBuildings))
@@ -56,5 +55,5 @@ func main() {
 	Routes()
 
 	log.Println("Server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", middleware.CORSMiddleware(http.DefaultServeMux)))
 }

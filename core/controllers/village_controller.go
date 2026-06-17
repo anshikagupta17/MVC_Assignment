@@ -10,8 +10,7 @@ import (
 	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
-func GetVillage(w http.ResponseWriter, r *http.Request) {
-
+func VillageState(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("user_id").(int64)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -21,18 +20,14 @@ func GetVillage(w http.ResponseWriter, r *http.Request) {
 	repo := repositories.VillageRepository{
 		DB: db.Conn,
 	}
-
-	village, err := repo.GetVillage(userId)
-
+	village, err := repo.VillateState(userId)
 	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(village)
-
 }
-
 func GetVillageBuildings(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("user_id").(int64)
 	if !ok {
@@ -108,24 +103,7 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		"message": "Building moved successfully",
 	})
 }
-func VillageState(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value("user_id").(int64)
-	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
 
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-	village, err := repo.VillateState(userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(village)
-}
 func AddBuilding(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("user_id").(int64)
 	if !ok {

@@ -6,25 +6,25 @@ import (
 )
 
 type Village struct {
-	ID            int64
-	UserId        int64
-	TownhallLevel int
-	Gold          int
-	Elixir        int
-	HousingSpace  int
-	Trophies      int
-	Layout        json.RawMessage
+	ID            int64           `json:"id"`
+	UserId        int64           `json:"user_id"`
+	TownhallLevel int             `json:"townhall_level"`
+	Gold          int             `json:"gold"`
+	Elixir        int             `json:"elixir"`
+	HousingSpace  int             `json:"housing_space"`
+	Trophies      int             `json:"trophies"`
+	Layout        json.RawMessage `json:"layout"`
 }
 
 type VillageBuilding struct {
-	ID            int64
-	VillageId     int64
-	BuildingId    int64
-	Level         int64
-	UpgradeEndsAt *time.Time
-	X             int64
-	Y             int64
-	LastUpdate    *time.Time
+	ID            int64      `json:"id"`
+	VillageId     int64      `json:"village_id"`
+	BuildingId    int64      `json:"building_id"`
+	Level         int64      `json:"level"`
+	UpgradeEndsAt *time.Time `json:"upgrade_ends_at"`
+	X             int64      `json:"x"`
+	Y             int64      `json:"y"`
+	LastUpdate    *time.Time `json:"last_update"`
 }
 
 type BuildingMetadata struct {

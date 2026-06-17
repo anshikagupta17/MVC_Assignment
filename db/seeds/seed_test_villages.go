@@ -76,25 +76,43 @@ func SeedTestVillages(conn *pgxpool.Pool) error {
 			continue
 		}
 
-		_, err = conn.Exec(ctx,
+		var villageID int64
+
+		err = conn.QueryRow(ctx,
 			`INSERT INTO villages(
-			user_id,
-			townhall_level,
-			gold,
-			elixir,
-			housing_space,
-			trophies,
-			layout
+				user_id,
+				townhall_level,
+				gold,
+				elixir,
+				housing_space,
+				trophies,
+				layout
+			)
+			VALUES(
+				$1,
+				$2,
+				50000,
+				50000,
+				$3,
+				$4,
+				$5
+			)
+			RETURNING id`,
+			userID,
+			village.TownhallLevel,
+			village.HousingSpace,
+			village.Trophies,
+			"{}").Scan(&villageID)
+
+		if err != nil {
+			return err
+		}
+
+		err = SeedVillageBuildings(
+			conn,
+			villageID,
+			village.TownhallLevel,
 		)
-		VALUES(
-			$1,
-			$2,
-			50000,
-			50000,
-			$3,
-			$4,
-			$5
-		)`, userID, village.TownhallLevel, village.HousingSpace, village.Trophies, "{}")
 
 		if err != nil {
 			return err
