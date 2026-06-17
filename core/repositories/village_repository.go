@@ -2,10 +2,8 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -83,47 +81,13 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
-	rows, err := r.DB.Query(ctx,
-		`SELECT id, building_id, level, upgrade_ends_at, x, y
-     FROM buildings_village
-     WHERE village_id = $1`, village.ID)
-	fmt.Println("Village ID:", village.ID)
-
+	buildings, err := r.VillageBuildings(village.ID)
 	if err != nil {
-		return village, err
-	}
-	defer rows.Close()
-
-	count := 0
-
-	for rows.Next() {
-		count++
-		var b models.VillageBuilding
-		var UpgradeEndsAt pgtype.Timestamp
-
-		err := rows.Scan(
-			&b.ID,
-			&b.BuildingId,
-			&b.Level,
-			&UpgradeEndsAt,
-			&b.X,
-			&b.Y,
-		)
-
-		if UpgradeEndsAt.Valid {
-			t := UpgradeEndsAt.Time
-			b.UpgradeEndsAt = &t
-		}
-
-		if err != nil {
-			return village, err
-		}
-
-		village.Buildings = append(village.Buildings, b)
+		return models.VillageResponse{}, err
 	}
 
-	fmt.Println("Buildings found:", count)
+	village.Buildings = buildings
 
-	return village, rows.Err()
+	return village, nil
 
 }
