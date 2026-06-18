@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/services/api";
-import { BUILDING_NAMES } from "@/constants/buildings";
+import Building from "@/components/building"
 
 export default function VillagePage() {
     const [village, setVillage] = useState(null);
@@ -21,16 +21,17 @@ export default function VillagePage() {
         }
 
         setVillage(data);
+        if (selectedBuilding) {
+            const updated = data.buildings?.find(b => b.id === selectedBuilding.id);
+            if (updated) setSelectedBuilding(updated);
+        }
         } catch (err) {
-        console.error(err);
-        alert("Failed to load village");
+            console.error(err);
+            alert("Failed to load village");
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     }
-    useEffect(() => {
-        console.log("Village state changed:", village);
-    }, [village]);
 
     useEffect(() => {
         fetchVillage();
@@ -44,16 +45,11 @@ export default function VillagePage() {
         return () => clearInterval(interval);
     }, []);
 
-    if (loading) {
-        return <div className="p-6">Loading village...</div>;
+    function handleSelectBuilding(building) {
+        setSelectedBuilding(building)
     }
 
-    if (!village) {
-        console.log(village);
-        return <div className="p-6">No village found</div>;
-    }
-
-        async function upgradeBuilding() {
+    async function upgradeBuilding() {
         if (!selectedBuilding) return;
 
         try {
@@ -66,10 +62,8 @@ export default function VillagePage() {
                     building_instance_id: selectedBuilding.id,
                 }),
             });
-            console.log(res.status);
 
             const text = await res.text();
-            console.log(text);
 
             if (!res.ok) {
                 throw new Error(text);
@@ -84,114 +78,68 @@ export default function VillagePage() {
         }
     }
 
-    function getRemainingTime(endTime) {
-        const diff = new Date(endTime) - new Date();
 
-        if (diff <= 0) return null;
+    if (loading) {
+        return <div className="p-6">Loading village...</div>;
+    }
 
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remSeconds = seconds % 60;
-
-        return `${minutes}m ${remSeconds}s`;
+    if (!village) {
+        console.log(village);
+        return <div className="p-6">No village found</div>;
     }
 
     return (
         <div className="p-6 space-y-6">
 
-            <h1 className="text-3xl font-bold">
-            </h1>
-
-            <div className="border p-4 space-y-2">
-                <h2 className="text-xl font-semibold">Resources</h2>
+            <div className="border p-4">
+                <h2>Resources</h2>
                 <p>Gold: {village.gold}</p>
                 <p>Elixir: {village.elixir}</p>
-                <p>Trophies: {village.trophies}</p>
             </div>
 
             <div className="border p-4">
-                <h2 className="text-xl font-semibold">Townhall</h2>
+                <h2>Townhall</h2>
                 <p>Level: {village.townhall_level}</p>
             </div>
-           
-            <div className="border p-4">
-                <h2 className="text-xl font-semibold mb-4">
-                    Village Layout
-                </h2>
 
-                <div className="relative w-[600px] h-[600px] border bg-[#3F704D] overflow-hidden">
+            <div className="border p-4">
+                <h2 className="mb-4">Village Layout</h2>
+
+                <div className="relative w-[600px] h-[600px] border bg-[#3F704D]">
 
                     {village.buildings?.map((b) => (
-                    <div
-                        key={b.id}
-                        onClick={() => setSelectedBuilding(b)}
-                        className={`absolute w-16 h-16 border flex flex-col items-center justify-center text-xs text-center shadow cursor-pointer hover:scale-105 transition
-                            ${b.upgrade_ends_at ? "opacity-60 border-red-400" : "bg-black"}
-                        `}
-                        style={{
-                            left: `${b.x * 20}px`,
-                            top: `${b.y * 20}px`,
-                        }}
-                    >
-                        <div>
-                        {BUILDING_NAMES[b.building_id]}
-                        </div>
-                        
-
-                        <div>
-                        <div>
-                            Lv {b.level}
-                        </div>
-
-                        {b.upgrade_ends_at && (
-                            <div className="text-red-500">
-                                {getRemainingTime(b.upgrade_ends_at)}
-                            </div>
-                        )}
-                        </div>
-                    </div>
+                        <Building
+                            key={b.id}
+                            building={b}
+                            isSelected={selectedBuilding?.id===b.id}
+                            onSelect={handleSelectBuilding}
+                        />
                     ))}
 
                 </div>
-                {selectedBuilding && (
-                    <div className="border p-4 mt-4 space-y-2">
-                        <h2 className="text-xl font-semibold">
-                            Building Details
-                        </h2>
+            </div>
 
-                        <p>
-                            Name: {BUILDING_NAMES[selectedBuilding.building_id]}
-                        </p>
+            {selectedBuilding && (
+                <div className="border p-4 mt-4">
+                    <h2>Building Details</h2>
+                    <p>ID: {selectedBuilding.id}</p>
+                    <p>Level: {selectedBuilding.level}</p>
 
-                        <p>
-                            Level: {selectedBuilding.level}
-                        </p>
-
-                        <p>
-                            Building ID: {selectedBuilding.id}
-                        </p>
-
-                        <p>
-                            Position:
-                            ({selectedBuilding.x}, {selectedBuilding.y})
-                        </p>
-
-                        <p>
-                            Upgrade Status:
-                            {selectedBuilding.upgrade_ends_at
-                                ? " Upgrading"
-                                : " Idle"}
-                        </p>
-
-                        <button
+                    {(selectedBuilding.building_id === 1 && selectedBuilding.level >= 4) || 
+                    (selectedBuilding.building_id !== 1 && selectedBuilding.level >= village.townhall_level) ? (
+                        <button className="border px-4 py-2 mt-2 bg-gray-300 text-gray-500 cursor-not-allowed" disabled>
+                            Max Level Reached
+                        </button>
+                    ) : (
+                        <button 
                             onClick={upgradeBuilding}
-                            className="border px-4 py-2"
+                            className="border px-4 py-2 mt-2 bg-blue-500 text-white"
                         >
                             Upgrade
                         </button>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
 
         </div>
     );

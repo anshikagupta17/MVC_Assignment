@@ -1,2 +1,2 @@
-ALTER TABLE buildings_village
+ALTER TABLE troops_base_metadata
 DROP COLUMN training_cost;

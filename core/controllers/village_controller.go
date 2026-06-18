@@ -98,7 +98,7 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to move building", http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Building moved successfully",
 	})

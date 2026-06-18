@@ -22,11 +22,6 @@ type VillageResources struct {
 }
 
 func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.VillageBuilding, error) {
-	err := r.CompleteUpgrades(village_id)
-	if err != nil {
-		return nil, err
-	}
-
 	ctx := context.Background()
 	rows, err := r.DB.Query(ctx,
 		`SELECT id, building_id, level, upgrade_ends_at, x, y
@@ -300,8 +295,17 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
-	if level+1 > townhall_level {
-		return errors.New("building cannot exceed townhall level")
+	log.Println("building_id =", building_id)
+	log.Println("building level =", level)
+	log.Println("townhall level =", townhall_level)
+	log.Println("level+1 =", level+1)
+	if building_id == 1 && level >= 4 {
+		return errors.New("Townhall has reached its maximum level of 4")
+	}
+	if building_id != 1 {
+		if level+1 > townhall_level {
+			return errors.New("building cannot exceed townhall level")
+		}
 	}
 
 	var metadata BuildingMetadata
@@ -365,10 +369,11 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 	if err != nil {
 		return err
 	}
-
+	log.Println("upgrade_time_sec =", metadata.UpgradeTimeSec)
 	finish_time := time.Now().Add(
 		time.Duration(metadata.UpgradeTimeSec) * time.Second,
 	)
+	log.Println("finish_time =", finish_time)
 
 	_, err = tx.Exec(
 		ctx,
@@ -387,6 +392,34 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
+	var completedTownhall int
+
+	err = tx.QueryRow(ctx,
+		`SELECT COUNT(*)
+		FROM buildings_village
+		WHERE village_id = $1
+		AND building_id = 1
+		AND upgrade_ends_at IS NOT NULL
+		AND upgrade_ends_at <= NOW()`,
+		village_id,
+	).Scan(&completedTownhall)
+
+	if err != nil {
+		return err
+	}
+
+	if completedTownhall > 0 {
+		_, err = tx.Exec(ctx,
+			`UPDATE villages
+			SET townhall_level = townhall_level + 1
+			WHERE id = $1`,
+			village_id,
+		)
+
+		if err != nil {
+			return err
+		}
+	}
 	_, err = tx.Exec(ctx,
 		`UPDATE buildings_village
 		SET
@@ -399,6 +432,7 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 	if err != nil {
 		return err
 	}
+
 	return tx.Commit(ctx)
 }
 

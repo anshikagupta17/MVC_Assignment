@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { apiFetch } from "@/services/api";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth_context";
 
 export default function LoginPage() {
   const { login } = useAuth();
