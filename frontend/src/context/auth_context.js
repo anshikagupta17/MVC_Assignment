@@ -6,6 +6,8 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -13,6 +15,7 @@ export function AuthProvider({ children }) {
     if (storedToken) {
       setToken(storedToken);
     }
+    setAuthLoading(false);
   }, []);
 
   function login(jwt){
@@ -32,6 +35,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isAuthenticated: !!token,
+        authLoading,
       }}
     >
       {children}

@@ -16,30 +16,26 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      const response = await apiFetch("/login", {
-        method: "POST",
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
+        const response = await apiFetch("/login", {
+            method: "POST",
+            body: JSON.stringify({ username, password }),
+        });
 
-      const data = await response.json();
+        const text = await response.text();
 
-      if (!response.ok) {
-        alert(data.message || "Login failed");
-        return;
-      }
+        if (!response.ok) {
+            alert(text || "Login failed");
+            return;
+        }
 
-      login(data.token);
-      router.push("/village");
-
-      alert("Login successful");
+        const data = JSON.parse(text);
+        login(data.token);
+        router.push("/village");
     } catch (err) {
-      console.error(err);
-      alert("Server error");
+        console.error(err);
+        alert("Server error");
     }
-  }
+}
 
   return (
     <div className="p-8">
