@@ -8,6 +8,9 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth_context";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { screenToTile } from "@/utils/isometric";
+import Image from "next/image";
+
 
 function VillagePage() {
     const [village, setVillage] = useState(null);
@@ -96,8 +99,12 @@ function VillagePage() {
     }
     function handleGridClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
-        let x = Math.floor((e.clientX - rect.left) / 20);
-        let y = Math.floor((e.clientY - rect.top) / 20);
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+
+        const { tileX, tileY } = screenToTile(screenX, screenY);
+        let x = tileX;
+        let y = tileY;
 
         if (buildingToPlace) {
             const sizeX = buildingToPlace.size_x || 1;
@@ -306,73 +313,70 @@ function VillagePage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="relative w-screen h-screen overflow-hidden">
 
-            <div className="border p-4">
-                <h2>Resources</h2>
-                <p>Gold: {village.gold}</p>
-                <p>Elixir: {village.elixir}</p>
-            </div>
-
-            <div className="border p-4">
-                <h2>Townhall</h2>
-                <p>Level: {village.townhall_level}</p>
-            </div>
-            <div className="border p-4 flex gap-2 items-center">
-                <button
-                    onClick={openShop}
-                    className="border px-4 py-2"
-                >
-                    Shop
-                </button>
-                <Link href="/battle">
-                    <button className="border px-4 py-2 bg-red-500 text-white">
-                        Battle
-                    </button>
-                </Link>
-
-                {buildingToPlace && (
-                    <p className="mt-2 text-sm">
-                        Click on the map to place: {buildingToPlace.name}
-                    </p>
-                )}
-            </div>
-
-            <div className="border p-4">
-                <h2 className="mb-4">Village Layout</h2>
-
-                <div
-                    className="relative w-[600px] h-[600px] border-4 border-[#2d4a35] overflow-hidden"
-                    onClick={handleGridClick}
-                    style={{
-                        backgroundImage: `
-                            linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
-                            url('/assets/grass.jpeg')
-                        `,
-                        backgroundSize: `
-                            20px 20px,
-                            20px 20px,
-                            64px 64px
-                        `,
-                        backgroundRepeat: "repeat",
-                    }}
-                >
-
+            <div
+                className="fixed inset-0 overflow-hidden"
+                onClick={handleGridClick}
+                style={{
+                    backgroundImage: `
+                        linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)
+                    `,
+                    backgroundSize: `20px 20px, 20px 20px`,
+                    backgroundColor: "#3F704D",
+                    backgroundRepeat: "repeat",
+                }}
+            >
+                <div className="relative w-full h-full">
                     {village.buildings?.map((b) => (
                         <Building
                             key={b.id}
                             building={b}
-                            isSelected={selectedBuilding?.id===b.id}
+                            isSelected={selectedBuilding?.id === b.id}
                             onSelect={handleSelectBuilding}
                         />
                     ))}
-
                 </div>
             </div>
 
+            <div className="fixed top-4 left-4 z-20 bg-black/70 text-white rounded-full px-4 py-2 flex gap-4 items-center">
+                <span>Gold: {village.gold}</span>
+                <span>Elixir: {village.elixir}</span>
+            </div>
+
+            <button
+                onClick={handleLogout}
+                className="fixed top-4 left-56 z-20 bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center"
+            >
+                <Image src="/assets/logout3.png" alt="Settings" width={24} height={24} />
+            </button>
+
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 text-white rounded-full px-4 py-2">
+                Townhall Lv {village.townhall_level}
+            </div>
+
+            <Link href="/battle" className="fixed top-4 right-4 z-20">
+                <button className="bg-red-500 text-white rounded-full px-4 py-2">
+                    Battle
+                </button>
+            </Link>
+
+            <button
+                onClick={openShop}
+                className="fixed bottom-4 right-4 z-20 bg-blue-500 text-white rounded-full px-4 py-2"
+            >
+                Shop
+            </button>
+
+            {buildingToPlace && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 text-white px-4 py-2 rounded">
+                    Click on the map to place: {buildingToPlace.name}
+                </div>
+            )}
+
             {selectedBuilding && (
-                <div className="border p-4 mt-4">
+                <div className="fixed bottom-4 left-4 z-20 bg-black/80 text-white p-4 rounded">
                     <h2>Building Details</h2>
                     <p>ID: {selectedBuilding.id}</p>
                     <p>Level: {selectedBuilding.level}</p>
@@ -386,13 +390,13 @@ function VillagePage() {
                         </button>
                     )}
 
-                    {(selectedBuilding.building_id === 1 && selectedBuilding.level >= 4) || 
+                    {(selectedBuilding.building_id === 1 && selectedBuilding.level >= 4) ||
                     (selectedBuilding.building_id !== 1 && selectedBuilding.level >= village.townhall_level) ? (
                         <button className="border px-4 py-2 mt-2 bg-gray-300 text-gray-500 cursor-not-allowed" disabled>
                             Max Level Reached
                         </button>
                     ) : (
-                        <button 
+                        <button
                             onClick={upgradeBuilding}
                             className="border px-4 py-2 mt-2 bg-blue-500 text-white"
                         >
@@ -401,6 +405,7 @@ function VillagePage() {
                     )}
                 </div>
             )}
+
             {showShop && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white text-black p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
@@ -443,8 +448,9 @@ function VillagePage() {
                     </div>
                 </div>
             )}
+
             {showTroops && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-[#5ECBC8] text-white p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4">Troops</h2>
 
@@ -462,8 +468,8 @@ function VillagePage() {
                                     <p className="font-semibold">{t.name}</p>
                                     <p className="text-sm">Level: {t.level || "-"}</p>
                                     <p className="text-sm">Quantity: {t.quantity}</p>
-                                    <p className="text-sm">Damage: {t.damage??"-"}</p>
-                                    <p className="text-sm">Max Health: {t.max_health??"-"}</p>
+                                    <p className="text-sm">Damage: {t.damage ?? "-"}</p>
+                                    <p className="text-sm">Max Health: {t.max_health ?? "-"}</p>
                                 </div>
                             ))
                         )}
@@ -498,29 +504,8 @@ function VillagePage() {
                     </div>
                 </div>
             )}
-            <div className="border p-4 flex gap-2 items-center">
-                <button onClick={openShop} className="border px-4 py-2">
-                    Shop
-                </button>
-                <Link href="/battle">
-                    <button className="border px-4 py-2 bg-red-500 text-white">
-                        Battle
-                    </button>
-                </Link>
-                <button onClick={handleLogout} className="border px-4 py-2 ml-auto">
-                    Logout
-                </button>
-
-                {buildingToPlace && (
-                    <p className="mt-2 text-sm">
-                        Click on the map to place: {buildingToPlace.name}
-                    </p>
-                )}
-            </div>
         </div>
     );
-
-
 
 }
 

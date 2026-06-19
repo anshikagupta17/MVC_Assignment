@@ -1,5 +1,7 @@
 "use client";
 import { BUILDING_NAMES } from "@/constants/buildings";
+import { tileToScreen, TILE_WIDTH, TILE_HEIGHT } from "@/utils/isometric";
+
 
 export default function Building({
     building,
@@ -10,6 +12,9 @@ export default function Building({
         e.stopPropagation();
         onSelect(building);
     }
+
+    const { screenX, screenY } = tileToScreen(building.x, building.y);
+    
     return (
         <div
             onClick={handleClick}
