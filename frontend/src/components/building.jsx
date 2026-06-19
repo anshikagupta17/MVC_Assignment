@@ -1,7 +1,5 @@
 "use client";
 import { BUILDING_NAMES } from "@/constants/buildings";
-import { tileToScreen, TILE_WIDTH, TILE_HEIGHT } from "@/utils/isometric";
-
 
 export default function Building({
     building,
@@ -13,20 +11,18 @@ export default function Building({
         onSelect(building);
     }
 
-    const { screenX, screenY } = tileToScreen(building.x, building.y);
-    
     return (
         <div
             onClick={handleClick}
-            className={`absolute w-16 h-16 border flex flex-col items-center justify-center text-xs text-center shadow cursor-pointer hover:scale-105 transition
+            className={`absolute border flex flex-col items-center justify-center text-xs text-center shadow cursor-pointer hover:scale-105 transition
                 ${building.upgrade_ends_at ? "opacity-60 border-red-400" : "bg-black"}
                 ${isSelected ? "ring-2 ring-yellow-300" : ""}
             `}
             style={{
                 left: `${building.x * 20}px`,
                 top: `${building.y * 20}px`,
-                width: `${building.size_x*20}px`,
-                height: `${building.size_y*20}px`,
+                width: `${building.size_x * 20}px`,
+                height: `${building.size_y * 20}px`,
             }}
         >
             {building.upgrade_ends_at && (

@@ -99,12 +99,8 @@ function VillagePage() {
     }
     function handleGridClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
-        const screenX = e.clientX - rect.left;
-        const screenY = e.clientY - rect.top;
-
-        const { tileX, tileY } = screenToTile(screenX, screenY);
-        let x = tileX;
-        let y = tileY;
+        let x = Math.floor((e.clientX - rect.left) / 20);
+        let y = Math.floor((e.clientY - rect.left) / 20);
 
         if (buildingToPlace) {
             const sizeX = buildingToPlace.size_x || 1;
