@@ -124,12 +124,12 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 	}
 	if gold+new_gold > gold_cap {
 		new_gold = gold_cap - gold
-		new_gold = min(0, new_gold)
+		new_gold = max(0, new_gold)
 	}
 
 	if elixir+new_elixir > elixir_cap {
 		new_elixir = elixir_cap - elixir
-		new_elixir = min(0, new_elixir)
+		new_elixir = max(0, new_elixir)
 	}
 
 	tx, err := r.DB.Begin(ctx)
