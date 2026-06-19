@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/services/api";
 import Building from "@/components/building"
+import { TROOP_TYPES } from "@/constants/troops";
 
 export default function VillagePage() {
     const [village, setVillage] = useState(null);
@@ -46,8 +47,11 @@ export default function VillagePage() {
     function handleSelectBuilding(building) {
        if (selectedBuilding?.id===building.id) {
         setSelectedBuilding(null);
-       }else {
-            setSelectedBuilding(building);
+        return;
+       }
+        setSelectedBuilding(building);
+        if (building.building_id===10){
+            openTroops(true);
         }
     }
 
@@ -198,7 +202,89 @@ export default function VillagePage() {
         }
     }
 
+    async function openTroops() {
+        try {
+            const res = await apiFetch("/village/troops");
+            const data = await res.json();
 
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to load troops");
+            }
+
+            const owned = data || [];
+            const merged = TROOP_TYPES.map((type) => {
+                const ownedTroop = owned.find((own) => own.troop_id === type.troop_id);
+                return ownedTroop || {
+                    troop_id: type.troop_id,
+                    name: type.name,
+                    level: 0,
+                    quantity: 0,
+                    damage: null,
+                    max_health: null,
+                };
+            });
+
+            setTroops(merged);
+            setShowTroops(true);
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+
+    async function trainTroop() {
+        if (!selectedTroop) return;
+
+        try {
+            const res = await apiFetch("/village/troops/train", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    troop_id: selectedTroop.troop_id,
+                    quantity: trainQuantity,
+                }),
+            });
+
+            const text = await res.text();
+
+            if (!res.ok) {
+                throw new Error(text);
+            }
+
+            await openTroops();
+            await fetchVillage();
+            alert("Troops trained");
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+
+    async function upgradeTroop() {
+        if (!selectedTroop) return;
+
+        try {
+            const res = await apiFetch("/village/troops/upgrade", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    troop_id: selectedTroop.troop_id,
+                }),
+            });
+
+            const text = await res.text();
+
+            if (!res.ok) {
+                throw new Error(text);
+            }
+
+            await openTroops();
+            alert("Troop upgrade started");
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
     if (loading) {
         return <div className="p-6">Loading village...</div>;
     }
@@ -239,8 +325,22 @@ export default function VillagePage() {
             <div className="border p-4">
                 <h2 className="mb-4">Village Layout</h2>
 
-                <div className="relative w-[600px] h-[600px] border bg-[#3F704D]"
-                onClick={handleGridClick}
+                <div
+                    className="relative w-[600px] h-[600px] border-4 border-[#2d4a35] overflow-hidden"
+                    onClick={handleGridClick}
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
+                            url('/assets/grass.jpeg')
+                        `,
+                        backgroundSize: `
+                            20px 20px,
+                            20px 20px,
+                            64px 64px
+                        `,
+                        backgroundRepeat: "repeat",
+                    }}
                 >
 
                     {village.buildings?.map((b) => (
@@ -322,6 +422,61 @@ export default function VillagePage() {
                             onClick={() => setShowShop(false)}
                             className="border px-4 py-2 mt-4"
                         >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+            {showTroops && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-[#5ECBC8] text-white p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <h2 className="text-xl font-bold mb-4">Troops</h2>
+
+                        {troops.length === 0 ? (
+                            <p>No troops trained yet</p>
+                        ) : (
+                            troops.map((t) => (
+                                <div
+                                    key={t.troop_id}
+                                    onClick={() => setSelectedTroop(t)}
+                                    className={`border border-gray-600 bg-[#A43B76] text-white p-3 mb-2 cursor-pointer rounded ${
+                                        selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
+                                    }`}
+                                >
+                                    <p className="font-semibold">{t.name}</p>
+                                    <p className="text-sm">Level: {t.level || "-"}</p>
+                                    <p className="text-sm">Quantity: {t.quantity}</p>
+                                    <p className="text-sm">Damage: {t.damage??"-"}</p>
+                                    <p className="text-sm">Max Health: {t.max_health??"-"}</p>
+                                </div>
+                            ))
+                        )}
+
+                        {selectedTroop && (
+                            <div className="border-t pt-4 mt-4">
+                                <label className="block mb-2">
+                                    Quantity to train:
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={trainQuantity}
+                                        onChange={(e) => setTrainQuantity(Number(e.target.value))}
+                                        className="border ml-2 px-2 py-1 w-20 text-white"
+                                    />
+                                </label>
+
+                                <div className="flex gap-2">
+                                    <button onClick={trainTroop} className="border px-4 py-2 bg-green-500 text-white">
+                                        Train
+                                    </button>
+                                    <button onClick={upgradeTroop} className="border px-4 py-2 bg-blue-500 text-white">
+                                        Upgrade
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <button onClick={() => { setShowTroops(false); setSelectedTroop(null); }} className="border px-4 py-2 mt-4">
                             Close
                         </button>
                     </div>

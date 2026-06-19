@@ -30,6 +30,7 @@ export default function LoginPage() {
       }
 
       login(data.token);
+      router.push("/village");
 
       alert("Login successful");
     } catch (err) {
