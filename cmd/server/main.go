@@ -31,6 +31,7 @@ func Routes() {
 	http.Handle("/village/buildings/move", middleware.JWTMiddleware(http.HandlerFunc(controllers.MoveBuilding)))
 	http.Handle("/village/buildings/build", middleware.JWTMiddleware(http.HandlerFunc(controllers.AddBuilding)))
 	http.Handle("/village/buildings/upgrade", middleware.JWTMiddleware(http.HandlerFunc(controllers.UpgradeBuilding)))
+	http.Handle("/village/shop", middleware.JWTMiddleware(http.HandlerFunc(controllers.GetShopBuildings)))
 
 	// Resources
 	http.Handle("/village/collect", middleware.JWTMiddleware(http.HandlerFunc(controllers.ResourceCollection)))

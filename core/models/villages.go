@@ -25,6 +25,8 @@ type VillageBuilding struct {
 	X             int64      `json:"x"`
 	Y             int64      `json:"y"`
 	LastUpdate    *time.Time `json:"last_update"`
+	SizeX         int        `json:"size_x"`
+	Sizey         int        `json:"size_y"`
 }
 
 type BuildingMetadata struct {

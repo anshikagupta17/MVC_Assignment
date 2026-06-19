@@ -24,8 +24,10 @@ type VillageResources struct {
 func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.VillageBuilding, error) {
 	ctx := context.Background()
 	rows, err := r.DB.Query(ctx,
-		`SELECT id, building_id, level, upgrade_ends_at, x, y
-		From buildings_village
+		`SELECT bv.id, bv.building_id, bv.level, bv.upgrade_ends_at, bv.x, bv.y,
+		bm.size_x, bm.size_y
+		From buildings_village bv 
+		JOIN buildings_metadata bm ON bm.id = bv.building_id
 		WHERE village_id= $1`, village_id)
 	if err != nil {
 		return nil, err
@@ -43,6 +45,8 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 			&upgradeEndsAt,
 			&building.X,
 			&building.Y,
+			&building.SizeX,
+			&building.Sizey,
 		)
 
 		if err != nil {
@@ -295,10 +299,6 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
-	log.Println("building_id =", building_id)
-	log.Println("building level =", level)
-	log.Println("townhall level =", townhall_level)
-	log.Println("level+1 =", level+1)
 	if building_id == 1 && level >= 4 {
 		return errors.New("Townhall has reached its maximum level of 4")
 	}
@@ -588,4 +588,70 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	return tx.Commit(ctx)
 
+}
+
+func (r *VillageRepository) GetShopBuildings(village_id int64) ([]models.ShopBuilding, error) {
+	ctx := context.Background()
+
+	var townhall_level int
+	err := r.DB.QueryRow(ctx,
+		`SELECT townhall_level
+        FROM villages
+        WHERE id = $1`, village_id).Scan(&townhall_level)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.DB.Query(ctx,
+		`SELECT bm.id, bm.name, bm.upgrade_cost, bm.cost_type, bm.size_x, bm.size_y,
+			bl.max_quantity,
+		COUNT(bv.id) AS current_count
+		FROM building_limits bl
+		JOIN buildings_metadata bm
+			ON bm.id = bl.building_id
+		LEFT JOIN buildings_village bv
+			ON bv.building_id = bm.id
+			AND bv.village_id = $1
+		WHERE bl.townhall_level = $2 AND bm.id != 1
+		GROUP BY
+			bm.id,
+			bm.name,
+			bm.upgrade_cost,
+			bm.cost_type,
+			bm.size_x,
+			bm.size_y,
+			bl.max_quantity
+		HAVING COUNT(bv.id) < bl.max_quantity
+		ORDER BY bm.id`, village_id, townhall_level)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.ShopBuilding
+
+	for rows.Next() {
+		var b models.ShopBuilding
+
+		err := rows.Scan(
+			&b.BuildingID,
+			&b.Name,
+			&b.Cost,
+			&b.CostType,
+			&b.SizeX,
+			&b.SizeY,
+			&b.MaxQuantity,
+			&b.CurrentCount,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, b)
+	}
+
+	return result, nil
 }

@@ -6,7 +6,8 @@ export default function Building({
     onSelect,
     isSelected,
 }) {
-    function handleClick() {
+    function handleClick(e) {
+        e.stopPropagation();
         onSelect(building);
     }
     return (
@@ -19,6 +20,8 @@ export default function Building({
             style={{
                 left: `${building.x * 20}px`,
                 top: `${building.y * 20}px`,
+                width: `${building.size_x*20}px`,
+                height: `${building.size_y*20}px`,
             }}
         >
             {building.upgrade_ends_at && (
