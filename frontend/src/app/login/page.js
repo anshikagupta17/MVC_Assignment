@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { apiFetch } from "@/services/api";
 import { useAuth } from "@/context/auth_context";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const { login } = useAuth();
+   const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

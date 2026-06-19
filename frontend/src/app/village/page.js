@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/services/api";
 import Building from "@/components/building"
 import { TROOP_TYPES } from "@/constants/troops";
+import Link from "next/link";
+import { useAuth } from "@/context/auth_context";
+import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-export default function VillagePage() {
+function VillagePage() {
     const [village, setVillage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -16,6 +20,13 @@ export default function VillagePage() {
     const [troops, setTroops] = useState([]);
     const [selectedTroop, setSelectedTroop] = useState(null);
     const [trainQuantity, setTrainQuantity] = useState(1);
+    const { logout } = useAuth();
+    const router = useRouter();
+
+    function handleLogout() {
+        logout();
+        router.push("/login");
+    }
     
 
     async function fetchVillage() {
@@ -307,13 +318,18 @@ export default function VillagePage() {
                 <h2>Townhall</h2>
                 <p>Level: {village.townhall_level}</p>
             </div>
-            <div className="border p-4">
+            <div className="border p-4 flex gap-2 items-center">
                 <button
                     onClick={openShop}
                     className="border px-4 py-2"
                 >
                     Shop
                 </button>
+                <Link href="/battle">
+                    <button className="border px-4 py-2 bg-red-500 text-white">
+                        Battle
+                    </button>
+                </Link>
 
                 {buildingToPlace && (
                     <p className="mt-2 text-sm">
@@ -482,9 +498,36 @@ export default function VillagePage() {
                     </div>
                 </div>
             )}
+            <div className="border p-4 flex gap-2 items-center">
+                <button onClick={openShop} className="border px-4 py-2">
+                    Shop
+                </button>
+                <Link href="/battle">
+                    <button className="border px-4 py-2 bg-red-500 text-white">
+                        Battle
+                    </button>
+                </Link>
+                <button onClick={handleLogout} className="border px-4 py-2 ml-auto">
+                    Logout
+                </button>
+
+                {buildingToPlace && (
+                    <p className="mt-2 text-sm">
+                        Click on the map to place: {buildingToPlace.name}
+                    </p>
+                )}
+            </div>
         </div>
     );
 
 
 
+}
+
+export default function VillagePageWrapper() {
+    return (
+        <ProtectedRoute>
+            <VillagePage />
+        </ProtectedRoute>
+    );
 }
