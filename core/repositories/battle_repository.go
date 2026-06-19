@@ -364,3 +364,42 @@ func (r *VillageRepository) AttackVillage(AttackerVillageID int64, req models.At
 
 	return result, nil
 }
+
+func (r *VillageRepository) GetOpponentBuildings(village_id int64) ([]models.VillageBuilding, error) {
+	ctx := context.Background()
+
+	rows, err := r.DB.Query(ctx,
+		`SELECT bv.id, bv.building_id, bv.level, bv.x, bv.y, bm.size_x, bm.size_y
+        FROM buildings_village bv
+        JOIN buildings_metadata bm ON bm.id = bv.building_id
+        WHERE bv.village_id = $1`, village_id)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.VillageBuilding
+
+	for rows.Next() {
+		var b models.VillageBuilding
+
+		err := rows.Scan(
+			&b.ID,
+			&b.BuildingId,
+			&b.Level,
+			&b.X,
+			&b.Y,
+			&b.SizeX,
+			&b.SizeY,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, b)
+	}
+
+	return result, nil
+}

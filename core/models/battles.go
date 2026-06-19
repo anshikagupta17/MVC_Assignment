@@ -28,3 +28,12 @@ type BattleResult struct {
 
 	TrophyChange int `json:"trophy_change"`
 }
+
+type OpponentResponse struct {
+	VillageID     int64             `json:"village_id"`
+	TownhallLevel int               `json:"townhall_level"`
+	Trophies      int               `json:"trophies"`
+	Gold          int               `json:"gold"`
+	Elixir        int               `json:"elixir"`
+	Buildings     []VillageBuilding `json:"buildings"`
+}

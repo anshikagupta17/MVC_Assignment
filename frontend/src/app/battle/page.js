@@ -119,8 +119,14 @@ export default function BattlePage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="p-6 space-y-6"
+            style={{backgroundImage: `url('/assets/logo.png')`,
+                backgroundRepeat: "no-repeat",
+
+            }}
+        >
+            <div className="flex justify-between items-center"
+        >
                 <h1 className="text-3xl font-bold">Battle</h1>
                 <Link href="/village">
                     <button className="border px-4 py-2">

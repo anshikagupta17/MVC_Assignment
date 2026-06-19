@@ -33,8 +33,23 @@ func FindOpponent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	buildings, err := repo.GetOpponentBuildings(opponent.VillageID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := models.OpponentResponse{
+		VillageID:     opponent.VillageID,
+		TownhallLevel: opponent.TownhallLevel,
+		Trophies:      opponent.Trophies,
+		Gold:          opponent.Gold,
+		Elixir:        opponent.Elixir,
+		Buildings:     buildings,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(opponent)
+	json.NewEncoder(w).Encode(response)
 }
 
 func AttackVillage(w http.ResponseWriter, r *http.Request) {

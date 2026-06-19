@@ -38,7 +38,12 @@ export default function LoginPage() {
 }
 
   return (
-    <div className="p-8">
+    <div className="p-8"
+      style={{backgroundImage: `url('/assets/logo.png')`,
+                backgroundRepeat: "no-repeat",
+
+      }}
+    >
       <h1 className="text-3xl font-bold mb-6">
         Login
       </h1>

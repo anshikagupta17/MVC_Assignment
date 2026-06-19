@@ -8,8 +8,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth_context";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { screenToTile } from "@/utils/isometric";
 import Image from "next/image";
+import { BUILDING_NAMES } from "@/constants/buildings";
 
 
 function VillagePage() {
@@ -317,7 +317,8 @@ function VillagePage() {
                 style={{
                     backgroundImage: `
                         linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)
+                        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
+                        url('/assets/grass.jpeg')
                     `,
                     backgroundSize: `20px 20px, 20px 20px`,
                     backgroundColor: "#3F704D",
@@ -336,19 +337,26 @@ function VillagePage() {
                 </div>
             </div>
 
-            <div className="fixed top-4 left-4 z-20 bg-black/70 text-white rounded-full px-4 py-2 flex gap-4 items-center">
-                <span>Gold: {village.gold}</span>
-                <span>Elixir: {village.elixir}</span>
+            <div className="fixed top-4 left-4 z-20 flex gap-6 items-center">
+                <div className="bg-black/70 text-white rounded-full px-4 py-2 flex gap-6 items-center">
+                    <span>Gold: {village.gold}</span>
+                    <span>Elixir: {village.elixir}</span>
+                </div>
+
+                <button
+                    onClick={handleLogout}
+                    className="bg-black/70 rounded-full w-10 h-10 flex items-center justify-center"
+                >
+                    <Image
+                        src="/assets/logout3.png"
+                        alt="Logout"
+                        width={20}
+                        height={20}
+                    />
+                </button>
             </div>
 
-            <button
-                onClick={handleLogout}
-                className="fixed top-4 left-56 z-20 bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center"
-            >
-                <Image src="/assets/logout3.png" alt="Settings" width={24} height={24} />
-            </button>
-
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 text-white rounded-full px-4 py-2">
+            <div className="bg-black/70 text-white rounded-full px-4 py-2">
                 Townhall Lv {village.townhall_level}
             </div>
 
@@ -372,10 +380,20 @@ function VillagePage() {
             )}
 
             {selectedBuilding && (
-                <div className="fixed bottom-4 left-4 z-20 bg-black/80 text-white p-4 rounded">
-                    <h2>Building Details</h2>
+                <div className="fixed bottom-4 left-4 z-20 bg-black/80 text-white p-4 rounded flex gap-4 items-start">
+                    <Image
+                        src={`/assets/buildings/${selectedBuilding.building_id}.png`}
+                        alt={BUILDING_NAMES[selectedBuilding.building_id]}
+                        width={60}
+                        height={60}
+                    ></Image>
+
+                    <h2 className="font-semibold">{BUILDING_NAMES[selectedBuilding.building_id]}</h2>
                     <p>ID: {selectedBuilding.id}</p>
                     <p>Level: {selectedBuilding.level}</p>
+                    {selectedBuilding.upgrade_ends_at && (
+                        <p className="text-red-400">Upgrading...</p>
+                    )}
 
                     {(selectedBuilding.building_id === 6 || selectedBuilding.building_id === 7) && (
                         <button
@@ -404,7 +422,7 @@ function VillagePage() {
 
             {showShop && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white text-black p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
+                    <div className=" text-[yellow] p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4">Shop</h2>
 
                         {shopBuildings.length === 0 ? (
@@ -427,7 +445,7 @@ function VillagePage() {
 
                                     <button
                                         onClick={() => handlePickBuilding(b)}
-                                        className="border px-3 py-1 bg-blue-500 text-white"
+                                        className="border px-3 py-1 bg-pink-500 text-yellow"
                                     >
                                         Build
                                     </button>
@@ -461,6 +479,11 @@ function VillagePage() {
                                         selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
                                     }`}
                                 >
+                                    <img
+                                        src={`/assets/troops/${t.troop_id}.png`}
+                                        alt={t.name}
+                                        className="w-12 h-12"
+                                    ></img>
                                     <p className="font-semibold">{t.name}</p>
                                     <p className="text-sm">Level: {t.level || "-"}</p>
                                     <p className="text-sm">Quantity: {t.quantity}</p>

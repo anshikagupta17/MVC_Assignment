@@ -46,7 +46,7 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 			&building.X,
 			&building.Y,
 			&building.SizeX,
-			&building.Sizey,
+			&building.SizeY,
 		)
 
 		if err != nil {

@@ -1,5 +1,6 @@
 "use client";
 import { BUILDING_NAMES } from "@/constants/buildings";
+import Image from "next/image";
 
 export default function Building({
     building,
@@ -14,26 +15,23 @@ export default function Building({
     return (
         <div
             onClick={handleClick}
-            className={`absolute border flex flex-col items-center justify-center text-xs text-center shadow cursor-pointer hover:scale-105 transition
-                ${building.upgrade_ends_at ? "opacity-60 border-red-400" : "bg-black"}
-                ${isSelected ? "ring-2 ring-yellow-300" : ""}
+            className={`absolute cursor-pointer hover:scale-105 transition
+                ${isSelected ? "ring-2 ring-yellow-300 rounded" : ""}
             `}
             style={{
                 left: `${building.x * 20}px`,
                 top: `${building.y * 20}px`,
-                width: `${building.size_x * 20}px`,
-                height: `${building.size_y * 20}px`,
+                width: `${building.size_x * 20*1.2}px`,
+                height: `${building.size_y * 20*1.2}px`,
             }}
         >
-            {building.upgrade_ends_at && (
-                <div className="absolute -top-4 text-[10px] text-red-400 bg-black px-1 rounded">
-                    Upgrading
-                </div>
-            )}
-
-            <div>{BUILDING_NAMES[building.building_id]}</div>
-
-            <div>Lv {building.level}</div>
+            <Image
+                src={`/assets/buildings/${building.building_id}.png`}
+                alt={BUILDING_NAMES[building.building_id]}
+                fill
+                sizes="100px"
+                className={building.upgrade_ends_at ? "opacity-60" : ""}
+            ></Image>
         </div>
     );
 }
