@@ -152,7 +152,7 @@
 </p>
 <hr>
 <h2>Setup Instructions</h2>
-<p>
+<pre>
 You need Docker installed. Nothing else is required — Go, Node, and Postgres all run inside containers.
 
 1. Clone the repository
@@ -201,7 +201,7 @@ bashdocker compose down
 To also wipe the database volume (full reset):
 
 bashdocker compose down -v
-</p>
+</pre>
 
 
 
