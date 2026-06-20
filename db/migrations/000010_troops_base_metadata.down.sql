@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS troops_base_metadata;

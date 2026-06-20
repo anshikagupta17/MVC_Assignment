@@ -11,10 +11,6 @@ func SeedAll(conn *pgxpool.Pool) error {
 		return err
 	}
 
-	if err := seed.SeedTestVillages(conn); err != nil {
-		return err
-	}
-
 	if err := seed.SeedBuildings(conn); err != nil {
 		return err
 	}
@@ -44,6 +40,10 @@ func SeedAll(conn *pgxpool.Pool) error {
 	}
 
 	if err := seed.SeedTroopsLevel(conn); err != nil {
+		return err
+	}
+
+	if err := seed.SeedTestVillages(conn); err != nil {
 		return err
 	}
 
