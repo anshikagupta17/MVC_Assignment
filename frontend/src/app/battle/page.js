@@ -138,6 +138,8 @@ export default function BattlePage() {
                 throw new Error(data.message || "Attack failed");
             }
 
+            await waitMilliseconds(30000);
+
             clearInterval(messageInterval);
             setBattleResult(data);
             setBattlePhase("result");
@@ -150,6 +152,30 @@ export default function BattlePage() {
             console.error(err);
             alert(err.message);
         }
+    }
+
+    function getSelectedTroopList() {
+        const list = [];
+
+        for (const troopId in selectedTroops) {
+            const quantity = selectedTroops[troopId];
+            if (quantity > 0) {
+                const troop_Id = Number(troopId);
+                const troopData = troops.find(function findTroop(t) {
+                    return t.troop_id === troopId;
+                });
+
+                if (troopData) {
+                    list.push({
+                        troop_id: troop_Id,
+                        name: troopData.name,
+                        quantity: quantity,
+                    });
+                }
+            }
+        }
+
+        return list;
     }
 
     return (
@@ -237,6 +263,19 @@ export default function BattlePage() {
                                     height: `${b.size_y * 10}px`,
                                 }}
                             />
+                        ))}
+
+                        {getSelectedTroopList().map((troop, index) => (
+                            <div
+                                key={troop.troop_id}
+                                className="absolute bg-blue-600 border border-white rounded-full w-8 h-8 flex items-center justify-center text-[10px] font-bold animate-pulse"
+                                style={{
+                                    left: `${20+index * 60}px`,
+                                    top: `${570}px`,
+                                }}
+                            >
+                                {troop.quantity}
+                            </div>
                         ))}
                     </div>
 
