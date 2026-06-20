@@ -38,47 +38,46 @@ export default function LoginPage() {
 }
 
   return (
-    <div className="p-8"
-      style={{backgroundImage: `url('/assets/logo.png')`,
-                backgroundRepeat: "no-repeat",
-
-      }}
+    <div className="min-h-screen flex items-center justify-center"
+      style={{backgroundImage:`url('/assets/battle.png')`}}
     >
-      <h1 className="text-3xl font-bold mb-6">
-        Login
-      </h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4 max-w-sm"
-      >
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
-          className="border p-2"
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
-          className="border p-2"
-        />
-
-        <button
-          type="submit"
-          className="border p-2"
-        >
+      <div className="bg-[white]/60 text-black p-8 rounded-xl shadow-lg w-full max-w-sm">
+        <h1 className="text-3xl font-bold mb-6 text-center">
           Login
-        </button>
-      </form>
+        </h1>
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
+            className="border p-2 rounded"
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
+            className="border p-2 rounded"
+          />
+
+          <button
+            type="submit"
+            className="border p-2 rounded bg-black text-white"
+          >
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

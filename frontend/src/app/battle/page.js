@@ -10,6 +10,18 @@ export default function BattlePage() {
     const [battleResult, setBattleResult] = useState(null);
     const [troops, setTroops] = useState([]);
     const [selectedTroops, setSelectedTroops] = useState({});
+    const [battlePhase, setBattlePhase] = useState("idle");
+    const [battleMessage, setBattleMessage] = useState("");
+    const [messageIndex, setMessageIndex] = useState(0);
+
+    const battleMessages = [
+        "Troops advancing",
+        "Defenses fighting back",
+        "Breaking through",
+        "Townhall in DANGER",
+        "Final assault underway",
+    ];
+
 
     useEffect(() => {
         fetchTroops();
@@ -80,6 +92,20 @@ export default function BattlePage() {
         return troopsToSend;
     }
 
+    function advanceBattleMessage() {
+        setMessageIndex(function nextIndex(prevIndex) {
+            const newIndex = (prevIndex + 1) % battleMessages.length;
+            setBattleMessage(battleMessages[newIndex]);
+            return newIndex;
+        });
+    }
+
+    function waitMilliseconds(ms) {
+        return new Promise(function startTimer(resolve) {
+            setTimeout(resolve, ms);
+        });
+    }
+
     async function attackOpponent() {
         if (!opponent) return;
 
@@ -90,15 +116,19 @@ export default function BattlePage() {
             return;
         }
 
+        setBattlePhase("fighting");
+        setMessageIndex(0);
+        setBattleMessage(battleMessages[0]);
+
+        const messageInterval = setInterval(advanceBattleMessage, 6000);
+
         try {
             const res = await apiFetch("/battle/attack", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     defender_id: opponent.village_id,
-                    troops: [
-                        { troop_id: 1, quantity: 5 },
-                    ],
+                    troops: troopsToSend,
                 }),
             });
 
@@ -108,11 +138,15 @@ export default function BattlePage() {
                 throw new Error(data.message || "Attack failed");
             }
 
+            clearInterval(messageInterval);
             setBattleResult(data);
+            setBattlePhase("result");
             setOpponent(null);
             setSelectedTroops({});
             await fetchTroops();
         } catch (err) {
+            clearInterval(messageInterval);
+            setBattlePhase("idle");
             console.error(err);
             alert(err.message);
         }
@@ -142,7 +176,7 @@ export default function BattlePage() {
                 {loading ? "Searching..." : "Find Opponent"}
             </button>
 
-            {opponent && (
+            {opponent && battlePhase === "idle" && (
                 <div className="border p-4 space-y-4">
                     <div>
                         <h2 className="text-xl font-semibold">Opponent Found</h2>
@@ -189,7 +223,28 @@ export default function BattlePage() {
                 </div>
             )}
 
-            {battleResult && (
+            {battlePhase === "fighting" && (
+                <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white">
+                    <div className="relative w-[600px] h-[600px] border-4 border-red-700 bg-[#3F704D] overflow-hidden">
+                        {opponent?.buildings?.map((b) => (
+                            <div
+                                key={b.id}
+                                className="absolute bg-black border"
+                                style={{
+                                    left: `${b.x * 10}px`,
+                                    top: `${b.y * 10}px`,
+                                    width: `${b.size_x * 10}px`,
+                                    height: `${b.size_y * 10}px`,
+                                }}
+                            />
+                        ))}
+                    </div>
+
+                    <p className="mt-6 text-xl animate-pulse">{battleMessage}</p>
+                </div>
+            )}
+
+            {battlePhase === "result" && battleResult && (
                 <div className="border p-4 space-y-2">
                     <h2 className="text-xl font-semibold">Battle Result</h2>
                     <p>Stars: {battleResult.stars}</p>
