@@ -51,16 +51,21 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6">Register</h1>
+        <div className="min-h-screen flex items-center justify-center"
+            style={{backgroundImage:`url('/assets/battle.png')`}}
+        >
+            <div className="bg-[white]/60 text-black p-8 rounded-xl shadow-lg w-full max-w-sm">
+                <h1 className="text-3xl font-bold mb-6 text-center">
+                    Register
+                </h1>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="border p-2"
+                    className="border p-2 rounded"
                 />
 
                 <input
@@ -68,10 +73,10 @@ export default function RegisterPage() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2"
+                    className="border p-2 rounded"
                 />
 
-                <button type="submit" className="border p-2">
+                <button type="submit" className="border p-2 rounded bg-black text-white">
                     Register
                 </button>
             </form>
@@ -82,6 +87,7 @@ export default function RegisterPage() {
                     Login
                 </Link>
             </p>
+            </div>
         </div>
     );
 }
