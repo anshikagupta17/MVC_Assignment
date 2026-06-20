@@ -252,13 +252,18 @@ func (r *VillageRepository) CanPlaceNewBuilding(village_id int64, building_id in
 }
 
 func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_id int64) error {
+	err := r.CompleteUpgrades(village_id)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
 
 	var building_id int64
 	var level int
 	var upgrade_ends_at pgtype.Timestamp
 
-	err := r.DB.QueryRow(ctx,
+	err = r.DB.QueryRow(ctx,
 		`SELECT building_id, level, upgrade_ends_at
 		FROM buildings_village
 		WHERE id = $1
@@ -613,7 +618,10 @@ func (r *VillageRepository) GetShopBuildings(village_id int64) ([]models.ShopBui
 		LEFT JOIN buildings_village bv
 			ON bv.building_id = bm.id
 			AND bv.village_id = $1
+		LEFT JOIN defense_metadata dm
+        	ON dm.type_id = bm.id AND dm.level = 1
 		WHERE bl.townhall_level = $2 AND bm.id != 1
+		AND (dm.unlock_level IS NULL OR dm.unlock_level <= $2)
 		GROUP BY
 			bm.id,
 			bm.name,

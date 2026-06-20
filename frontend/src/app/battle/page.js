@@ -251,35 +251,7 @@ export default function BattlePage() {
 
             {battlePhase === "fighting" && (
                 <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white">
-                    <div className="relative w-[600px] h-[600px] border-4 border-red-700 bg-[#3F704D] overflow-hidden">
-                        {opponent?.buildings?.map((b) => (
-                            <div
-                                key={b.id}
-                                className="absolute bg-black border"
-                                style={{
-                                    left: `${b.x * 10}px`,
-                                    top: `${b.y * 10}px`,
-                                    width: `${b.size_x * 10}px`,
-                                    height: `${b.size_y * 10}px`,
-                                }}
-                            />
-                        ))}
-
-                        {getSelectedTroopList().map((troop, index) => (
-                            <div
-                                key={troop.troop_id}
-                                className="absolute bg-blue-600 border border-white rounded-full w-8 h-8 flex items-center justify-center text-[10px] font-bold animate-pulse"
-                                style={{
-                                    left: `${20+index * 60}px`,
-                                    top: `${570}px`,
-                                }}
-                            >
-                                {troop.quantity}
-                            </div>
-                        ))}
-                    </div>
-
-                    <p className="mt-6 text-xl animate-pulse">{battleMessage}</p>
+                    <p className="text-3xl animate-pulse">{battleMessage}</p>
                 </div>
             )}
 

@@ -31,7 +31,11 @@ docker-down:
 docker-build:
 	docker compose build
 
+docker-build-up:
+	docker compose up --build
+
 ## Seed the database manually
 seed:
 	SEED_DB=true go run ./cmd/server
+
 
