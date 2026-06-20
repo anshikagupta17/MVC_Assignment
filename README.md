@@ -157,14 +157,14 @@ You need Docker installed. Nothing else is required — Go, Node, and Postgres a
 
 1. Clone the repository
 
-bashgit clone https://github.com/anshikagupta17/MVC_Assignment.git
+git clone https://github.com/anshikagupta17/MVC_Assignment.git
 cd MVC_Assignment
 
 2. Create your environment file
 
 Copy the example file and fill in your own values:
 
-bashcp .env.example .env
+cp .env.example .env
 
 .env should contain:
 
@@ -178,7 +178,7 @@ SEED_DB=true
 
 3. Start everything with Docker Compose
 
-bashdocker compose up --build
+docker compose up --build
 
 This will:
 Start a PostgreSQL container
@@ -187,7 +187,7 @@ Build and start the Next.js frontend
 
 To run it in the background instead:
 
-bashdocker compose up --build -d
+docker compose up --build -d
 
 4. Access the app
 
@@ -196,11 +196,11 @@ Backend API: http://localhost:8080
 
 5. Stopping everything
 
-bashdocker compose down
+docker compose down
 
 To also wipe the database volume (full reset):
 
-bashdocker compose down -v
+docker compose down -v
 </pre>
 
 
