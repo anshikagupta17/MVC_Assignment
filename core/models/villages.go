@@ -46,4 +46,5 @@ type VillageResponse struct {
 	TownhallLevel int               `json:"townhall_level"`
 	Layout        json.RawMessage   `json:"layout"`
 	Buildings     []VillageBuilding `json:"buildings"`
+	Trophies      int               `json:"trophies"`
 }

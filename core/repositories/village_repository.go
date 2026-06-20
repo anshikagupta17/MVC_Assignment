@@ -70,9 +70,9 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 	ctx := context.Background()
 	var village models.VillageResponse
 	err := r.DB.QueryRow(ctx,
-		`SELECT id, gold, elixir, townhall_level, layout
+		`SELECT id, gold, elixir, townhall_level, layout, trophies
 		FROM villages
-		where user_id=$1`, user_id).Scan(&village.ID, &village.Gold, &village.Elixir, &village.TownhallLevel, &village.Layout)
+		where user_id=$1`, user_id).Scan(&village.ID, &village.Gold, &village.Elixir, &village.TownhallLevel, &village.Layout, &village.Trophies)
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
