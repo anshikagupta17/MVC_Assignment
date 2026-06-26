@@ -279,7 +279,7 @@ func (r *VillageRepository) ApplyBattleResult(AttackerVillageID int64, DefenderV
 		SET
 			gold = gold + $1,
 			elixir = elixir + $2,
-			trophies = trophies + $3
+			trophies = GREATEST(trophies + $3)
 		WHERE id = $4`, result.LootGold, result.LootElixir, result.TrophyChange, AttackerVillageID)
 	if err != nil {
 		return err
