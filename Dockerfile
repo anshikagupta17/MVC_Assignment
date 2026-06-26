@@ -1,9 +1,6 @@
-# --- Build stage ---
+#Build stage
 FROM golang:1.26-alpine AS builder
-
 WORKDIR /app
-
-# Install git (needed for go mod download of some packages)
 RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
@@ -13,13 +10,12 @@ COPY . .
 
 RUN go build -o server ./cmd/server
 
-# --- golang-migrate binary stage ---
 FROM golang:1.26-alpine AS migrate-builder
 
 RUN apk add --no-cache git
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
-# --- Final stage ---
+#Final stage
 FROM alpine:3.20
 
 WORKDIR /app

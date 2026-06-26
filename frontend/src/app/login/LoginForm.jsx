@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiFetch } from "@/services/api";
 import { useAuth } from "@/context/auth_context";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -38,32 +39,42 @@ export default function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-4"
-    >
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="border p-2 rounded"
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="border p-2 rounded"
-      />
-
-      <button
-        type="submit"
-        className="border p-2 rounded bg-black text-white"
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
       >
-        Login
-      </button>
-    </form>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="border p-2 rounded"
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border p-2 rounded"
+        />
+
+        <button
+          type="submit"
+          className="border p-2 rounded bg-black text-white"
+        >
+          Login
+        </button>
+      </form>
+      <p className="mt-4">
+        New User?{" "}
+        <Link href="/register" className="underline">
+          Register
+        </Link>
+      </p>
+    </>
+
+    
   );
 }
