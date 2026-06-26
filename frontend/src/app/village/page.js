@@ -100,7 +100,7 @@ function VillagePage() {
     function handleGridClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
         let x = Math.floor((e.clientX - rect.left) / 20);
-        let y = Math.floor((e.clientY - rect.left) / 20);
+        let y = Math.floor((e.clientY - rect.top) / 20);
 
         if (buildingToPlace) {
             const sizeX = buildingToPlace.size_x || 1;
@@ -228,6 +228,9 @@ function VillagePage() {
             const owned = data || [];
             const merged = TROOP_TYPES.map((type) => {
                 const ownedTroop = owned.find((own) => own.troop_id === type.troop_id);
+                if (ownedTroop) {
+                    return { ...ownedTroop, unlock_level: type.unlock_level}
+                }
                 return ownedTroop || {
                     troop_id: type.troop_id,
                     name: type.name,
@@ -235,6 +238,7 @@ function VillagePage() {
                     quantity: 0,
                     damage: null,
                     max_health: null,
+                    unlock_level: type.unlock_level,
                 };
             });
 
@@ -472,26 +476,39 @@ function VillagePage() {
                         {troops.length === 0 ? (
                             <p>No troops trained yet</p>
                         ) : (
-                            troops.map((t) => (
-                                <div
-                                    key={t.troop_id}
-                                    onClick={() => setSelectedTroop(t)}
-                                    className={`border border-gray-600 bg-[#A43B76] text-white p-3 mb-2 cursor-pointer rounded ${
-                                        selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
-                                    }`}
-                                >
-                                    <img
-                                        src={`/assets/troops/${t.troop_id}.png`}
-                                        alt={t.name}
-                                        className="w-12 h-12"
-                                    ></img>
-                                    <p className="font-semibold">{t.name}</p>
-                                    <p className="text-sm">Level: {t.level || "-"}</p>
-                                    <p className="text-sm">Quantity: {t.quantity}</p>
-                                    <p className="text-sm">Damage: {t.damage ?? "-"}</p>
-                                    <p className="text-sm">Max Health: {t.max_health ?? "-"}</p>
-                                </div>
-                            ))
+                            troops.map((t) => {
+                                const isLocked = t.unlock_level > village.townhall_level;
+
+                                return(
+                                    <div
+                                        key={t.troop_id}
+                                        onClick={() => {
+                                            if (!isLocked) setSelectedTroop(t);
+                                        }}
+                                        className={`border border-gray-600 p-3 mb-2 rounded ${
+                                            isLocked
+                                                ? "bg-gray-500 opacity-50 cursor-not-allowed"
+                                                : "bg-[#A43B76] text-white cursor-pointer"
+                                        }${
+                                            selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
+                                        }`}
+                                    >
+                                        <img
+                                            src={`/assets/troops/${t.troop_id}.png`}
+                                            alt={t.name}
+                                            className="w-12 h-12"
+                                        ></img>
+                                        <p className="font-semibold">{t.name}</p>
+                                        <p className="text-sm">Level: {t.level || "-"}</p>
+                                        <p className="text-sm">Quantity: {t.quantity}</p>
+                                        <p className="text-sm">Damage: {t.damage ?? "-"}</p>
+                                        <p className="text-sm">Max Health: {t.max_health ?? "-"}</p>
+                                        {isLocked && (
+                                            <p className="text-xs mt-1">Unlocks at Townhall {t.unlock_level}</p>
+                                        )}
+                                    </div>
+                                );
+                            })
                         )}
 
                         {selectedTroop && (
