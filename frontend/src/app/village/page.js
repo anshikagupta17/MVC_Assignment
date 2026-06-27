@@ -23,12 +23,29 @@ function VillagePage() {
     const [troops, setTroops] = useState([]);
     const [selectedTroop, setSelectedTroop] = useState(null);
     const [trainQuantity, setTrainQuantity] = useState(1);
+    const [errorMsg, setErrorMsg] = useState("");
+    const [successMsg, setSuccessMsg] = useState("");
+
+
     const { logout } = useAuth();
+
     const router = useRouter();
 
     function handleLogout() {
         logout();
         router.push("/login");
+    }
+
+    function showError(rawMessage, fallbackMessage) {
+        const displayMessage = fallbackMessage || rawMessage;
+        setErrorMsg(displayMessage);
+        setTimeout(() => setErrorMsg(""), 5000);
+    }
+
+   
+    function showSuccess(message) {
+        setSuccessMsg(message);
+        setTimeout(() => setSuccessMsg(""), 3000);
     }
     
 
@@ -48,7 +65,7 @@ function VillagePage() {
         }
         } catch (err) {
             console.error(err);
-            alert("Failed to load village");
+            showError(err.message,"Failed to load village");
         } finally {
             setLoading(false);
         }
@@ -91,10 +108,10 @@ function VillagePage() {
 
             await fetchVillage();
 
-            alert("Upgrade started");
+            showSuccess("Upgrade started!");
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message,"Couldn't start the upgrade. Try again.");
         }
     }
     function handleGridClick(e) {
@@ -144,7 +161,7 @@ function VillagePage() {
             await fetchVillage();
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't move the building there. Try a different spot.");
         }
     }
 
@@ -161,7 +178,7 @@ function VillagePage() {
             setShowShop(true);
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't open the shop right now. Try again.");
         }
     }
 
@@ -192,7 +209,7 @@ function VillagePage() {
             await fetchVillage();
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't place the building there. Try a different spot.");
         }
     }
 
@@ -209,10 +226,10 @@ function VillagePage() {
             }
 
             await fetchVillage();
-            alert(`Collected ${data.Gold} gold and ${data.Elixir} elixir`);
+            showSuccess(`Collected ${data.Gold} gold and ${data.Elixir} elixir`);
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't collect resources right now. Try again.");
         }
     }
 
@@ -246,7 +263,7 @@ function VillagePage() {
             setShowTroops(true);
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't load your troops right now. Try again.");
         }
     }
 
@@ -271,10 +288,10 @@ function VillagePage() {
 
             await openTroops();
             await fetchVillage();
-            alert("Troops trained");
+            showSuccess("Troops trained!");
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't train troops right now. Try again.");
         }
     }
 
@@ -297,10 +314,10 @@ function VillagePage() {
             }
 
             await openTroops();
-            alert("Troop upgrade started");
+            showSuccess("Troop upgrade started!");
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't upgrade troops right now. Try again.");
         }
     }
     if (loading) {
@@ -314,6 +331,17 @@ function VillagePage() {
 
     return (
         <div className="relative w-screen h-screen overflow-hidden">
+            {errorMsg && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                    {errorMsg}
+                </div>
+            )}
+
+            {successMsg && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                    {successMsg}
+                </div>
+            )}
 
             <div
                 className="fixed inset-0 overflow-hidden"
