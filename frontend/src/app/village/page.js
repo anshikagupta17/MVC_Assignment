@@ -82,7 +82,7 @@ function VillagePage() {
        }
         setSelectedBuilding(building);
         if (building.building_id===10){
-            openTroops(true);
+            openTroops();
         }
     }
 

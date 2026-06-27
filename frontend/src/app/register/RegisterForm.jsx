@@ -59,6 +59,11 @@ export default function RegisterForm() {
 
     return (
         <>
+            {errorMsg && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                    {errorMsg}
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <input
                     type="text"
