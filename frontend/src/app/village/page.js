@@ -471,7 +471,13 @@ function VillagePage() {
             {showTroops && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-[#5ECBC8] text-white p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">Troops</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold">Troops</h2>
+                        
+                            <button onClick={() => { setShowTroops(false); setSelectedTroop(null); }} className="border px-4 py-2 mt-4">
+                                Close
+                            </button>
+                        </div>
 
                         {troops.length === 0 ? (
                             <p>No troops trained yet</p>
@@ -489,7 +495,7 @@ function VillagePage() {
                                             isLocked
                                                 ? "bg-gray-500 opacity-50 cursor-not-allowed"
                                                 : "bg-[#A43B76] text-white cursor-pointer"
-                                        }${
+                                        } ${
                                             selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
                                         }`}
                                     >
@@ -535,9 +541,7 @@ function VillagePage() {
                             </div>
                         )}
 
-                        <button onClick={() => { setShowTroops(false); setSelectedTroop(null); }} className="border px-4 py-2 mt-4">
-                            Close
-                        </button>
+                        
                     </div>
                 </div>
             )}

@@ -15,7 +15,7 @@ export default function Building({
     return (
         <div
             onClick={handleClick}
-            className={`absolute cursor-pointer hover:scale-105 transition
+            className={`absolute hover:scale-105 transition
                 ${isSelected ? "ring-2 ring-yellow-300 rounded" : ""}
             `}
             style={{
