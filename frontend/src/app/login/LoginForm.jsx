@@ -12,6 +12,13 @@ export default function LoginForm() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  function showError(rawMessage, fallbackMessage) {
+    const displayMessage = fallbackMessage || rawMessage;
+    setErrorMsg(displayMessage);
+    setTimeout(() => setErrorMsg(""), 5000);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,7 +32,7 @@ export default function LoginForm() {
       const text = await response.text();
 
       if (!response.ok) {
-        alert(text || "Login failed");
+        showError(text, "Login failed");
         return;
       }
 
@@ -34,7 +41,7 @@ export default function LoginForm() {
       router.push("/village");
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      showError(err.message, "Server error");
     }
   }
 
