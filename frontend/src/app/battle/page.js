@@ -250,7 +250,7 @@ export default function BattlePage() {
             )}
 
             {battlePhase === "fighting" && (
-                <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white">
+                <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white animate-pulse">
                     <p className="text-3xl">{battleMessage}</p>
                 </div>
             )}
