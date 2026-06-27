@@ -13,6 +13,7 @@ export default function BattlePage() {
     const [battlePhase, setBattlePhase] = useState("idle");
     const [battleMessage, setBattleMessage] = useState("");
     const [messageIndex, setMessageIndex] = useState(0);
+    const [errorMsg, setErrorMsg] = useState("");
 
     const battleMessages = [
         "Troops advancing",
@@ -42,6 +43,12 @@ export default function BattlePage() {
         }
     }
 
+    function showError(rawMessage, fallbackMessage) {
+        const displayMessage = fallbackMessage || rawMessage;
+        setErrorMsg(displayMessage);
+        setTimeout(() => setErrorMsg(""), 5000);
+    }
+
 
     async function FindOpponent() {
         setLoading(true);
@@ -62,7 +69,7 @@ export default function BattlePage() {
             setOpponent(data);
         } catch (err) {
             console.error(err);
-            alert(err.message);
+            showError(err.message, "Couldn't find an opponent right now. Try again in a bit.");
         } finally {
             setLoading(false);
         }
@@ -112,7 +119,7 @@ export default function BattlePage() {
         const troopsToSend = buildTroopsToSend(selectedTroops);
 
         if (troopsToSend.length === 0) {
-            alert("Select at least one troop to attack with");
+            showError(null, "Pick at least one troop before attacking.");
             return;
         }
 
@@ -150,7 +157,7 @@ export default function BattlePage() {
             clearInterval(messageInterval);
             setBattlePhase("idle");
             console.error(err);
-            alert(err.message);
+            showError(err.message, "The attack couldn't go through. Try again.");
         }
     }
 
@@ -185,6 +192,11 @@ export default function BattlePage() {
 
             }}
         >
+            {errorMsg && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+                    {errorMsg}
+                </div>
+            )}
             <div className="flex justify-between items-center"
         >
                 <h1 className="text-3xl font-bold">Battle</h1>
