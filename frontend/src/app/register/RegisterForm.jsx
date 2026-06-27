@@ -12,6 +12,13 @@ export default function RegisterForm() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMsg, setErrorMsg] = useState("");
+
+    function showError(rawMessage, fallbackMessage) {
+        const displayMessage = fallbackMessage || rawMessage;
+        setErrorMsg(displayMessage);
+        setTimeout(() => setErrorMsg(""), 5000);
+    }
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -25,7 +32,7 @@ export default function RegisterForm() {
             const registerData = await registerRes.json();
 
             if (!registerRes.ok) {
-                alert(registerData.message || "Registration failed");
+                showError(registerData.message,"Registration failed");
                 return;
             }
 
@@ -37,7 +44,7 @@ export default function RegisterForm() {
             const loginData = await loginRes.json();
 
             if (!loginRes.ok) {
-                alert(loginData.message || "Auto-login failed, please log in manually");
+                showError(loginData.message,"Auto-login failed, please log in manually");
                 router.push("/login");
                 return;
             }
@@ -46,7 +53,7 @@ export default function RegisterForm() {
             router.push("/village");
         } catch (err) {
             console.error(err);
-            alert("Server error");
+            showError(err.message,"Server error");
         }
     }
 
