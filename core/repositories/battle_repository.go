@@ -51,8 +51,7 @@ func (r *VillageRepository) FindOpponent(village_ID int64) (*models.MatchmakingR
 	return &opponent, nil
 }
 
-func (r *VillageRepository) ValidateArmy(village_id int64, deployedTroops []models.AttackTroop) error {
-	ctx := context.Background()
+func ValidateArmy(ctx context.Context, db DBExecutor, village_id int64, deployedTroops []models.AttackTroop) error {
 
 	if len(deployedTroops) == 0 {
 		return errors.New("No troops selected")
@@ -66,12 +65,13 @@ func (r *VillageRepository) ValidateArmy(village_id int64, deployedTroops []mode
 
 		var owned_amount int
 
-		err := r.DB.QueryRow(
+		err := db.QueryRow(
 			ctx,
 			`SELECT quantity
 			FROM troops_village
 			WHERE village_id = $1
-			AND troops_id = $2`, village_id, troop.TroopID).Scan(&owned_amount)
+			AND troops_id = $2
+			FOR UPDATE`, village_id, troop.TroopID).Scan(&owned_amount)
 
 		if err != nil {
 			return errors.New("Troop not owned")
@@ -85,16 +85,14 @@ func (r *VillageRepository) ValidateArmy(village_id int64, deployedTroops []mode
 	return nil
 }
 
-func (r *VillageRepository) CalculateAttackPower(village_id int64, deployed_troops []models.AttackTroop) (int, int, error) {
-	ctx := context.Background()
-
+func CalculateAttackPower(ctx context.Context, db DBExecutor, village_id int64, deployed_troops []models.AttackTroop) (int, int, error) {
 	total_power := 0
 	total_health := 0
 	for _, troop := range deployed_troops {
 		var damage int
 		var health int
 
-		err := r.DB.QueryRow(ctx,
+		err := db.QueryRow(ctx,
 			`SELECT tlm.damage, tlm.max_health
 			FROM troops_level_metadata tlm
 			JOIN troops_village tv 
@@ -113,12 +111,10 @@ func (r *VillageRepository) CalculateAttackPower(village_id int64, deployed_troo
 	return total_power, total_health, nil
 }
 
-func (r *VillageRepository) CalculateDefensePower(village_id int64) (int, int, error) {
-	ctx := context.Background()
-
+func CalculateDefensePower(ctx context.Context, db DBExecutor, village_id int64) (int, int, error) {
 	total_damage := 0
 	total_health := 0
-	rows, err := r.DB.Query(ctx,
+	rows, err := db.Query(ctx,
 		`SELECT
 			dm.damage,
 			dm.max_health
@@ -205,13 +201,13 @@ func CalculateResult(AttackerDamage int, AttackerHealth int, DefenderDamage int,
 	return result
 }
 
-func (r *VillageRepository) Loot(DefenderVillageID int64, destruction_percent int) (int, int, error) {
-	ctx := context.Background()
+func Loot(ctx context.Context, db DBExecutor, DefenderVillageID int64, destruction_percent int) (int, int, error) {
 	var defender_gold, defender_elixir int
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT gold, elixir
-	FROM villages
-	WHERE id=$1`, DefenderVillageID).Scan(&defender_gold, &defender_elixir)
+		FROM villages
+		WHERE id=$1
+		FOR UPDATE`, DefenderVillageID).Scan(&defender_gold, &defender_elixir)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -236,14 +232,14 @@ func (r *VillageRepository) Loot(DefenderVillageID int64, destruction_percent in
 
 	return loot_gold, loot_elixir, nil
 }
-func (r *VillageRepository) ConsumeTroops(village_id int64, deployed_troops []models.AttackTroop) error {
-	ctx := context.Background()
+func ConsumeTroops(ctx context.Context, db DBExecutor, village_id int64, deployed_troops []models.AttackTroop) error {
 	for _, troops := range deployed_troops {
 		var Quantity int
-		err := r.DB.QueryRow(ctx,
+		err := db.QueryRow(ctx,
 			`SELECT quantity
 			FROM troops_village
-			WHERE village_id=$1 AND troops_id=$2`, village_id, troops.TroopID).Scan(&Quantity)
+			WHERE village_id=$1 AND troops_id=$2
+			FOR UPDATE`, village_id, troops.TroopID).Scan(&Quantity)
 
 		if err != nil {
 			return errors.New("Troop not found")
@@ -252,7 +248,7 @@ func (r *VillageRepository) ConsumeTroops(village_id int64, deployed_troops []mo
 			Quantity -= troops.Quantity
 			Quantity = max(0, Quantity)
 		}
-		_, err = r.DB.Exec(ctx,
+		_, err = db.Exec(ctx,
 			`UPDATE troops_village
 		SET quantity=$1
 		Where village_id=$2 AND troops_id=$3`, Quantity, village_id, troops.TroopID)
@@ -265,16 +261,8 @@ func (r *VillageRepository) ConsumeTroops(village_id int64, deployed_troops []mo
 
 }
 
-func (r *VillageRepository) ApplyBattleResult(AttackerVillageID int64, DefenderVillageID int64, result models.BattleResult) error {
-	ctx := context.Background()
-
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	_, err = tx.Exec(ctx,
+func (r *VillageRepository) ApplyBattleResult(ctx context.Context, db DBExecutor, AttackerVillageID int64, DefenderVillageID int64, result models.BattleResult) error {
+	_, err := db.Exec(ctx,
 		`UPDATE villages
 		SET
 			gold = gold + $1,
@@ -285,7 +273,7 @@ func (r *VillageRepository) ApplyBattleResult(AttackerVillageID int64, DefenderV
 		return err
 	}
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE villages
 		SET
 			gold = gold - $1,
@@ -296,7 +284,7 @@ func (r *VillageRepository) ApplyBattleResult(AttackerVillageID int64, DefenderV
 		return err
 	}
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`INSERT INTO battles(
 			attacker_id,
 			defender_id,
@@ -323,28 +311,35 @@ func (r *VillageRepository) ApplyBattleResult(AttackerVillageID int64, DefenderV
 		return err
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (r *VillageRepository) AttackVillage(AttackerVillageID int64, req models.AttackRequest) (models.BattleResult, error) {
-	err := r.ValidateArmy(AttackerVillageID, req.Troops)
+	ctx := context.Background()
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return models.BattleResult{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	err = ValidateArmy(ctx, tx, AttackerVillageID, req.Troops)
 
 	if err != nil {
 		return models.BattleResult{}, err
 	}
-	AttackerDamage, AttackerHealth, err := r.CalculateAttackPower(AttackerVillageID, req.Troops)
+	AttackerDamage, AttackerHealth, err := CalculateAttackPower(ctx, tx, AttackerVillageID, req.Troops)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
 
-	DefenderDamage, DefenderHealth, err := r.CalculateDefensePower(req.DefenderID)
+	DefenderDamage, DefenderHealth, err := CalculateDefensePower(ctx, tx, req.DefenderID)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
 
 	result := CalculateResult(AttackerDamage, AttackerHealth, DefenderDamage, DefenderHealth)
 
-	LootGold, LootElixir, err := r.Loot(req.DefenderID, result.DestructionPercentage)
+	LootGold, LootElixir, err := Loot(ctx, tx, req.DefenderID, result.DestructionPercentage)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
@@ -352,12 +347,17 @@ func (r *VillageRepository) AttackVillage(AttackerVillageID int64, req models.At
 	result.LootGold = LootGold
 	result.LootElixir = LootElixir
 
-	err = r.ConsumeTroops(AttackerVillageID, req.Troops)
+	err = ConsumeTroops(ctx, tx, AttackerVillageID, req.Troops)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
 
-	err = r.ApplyBattleResult(AttackerVillageID, req.DefenderID, result)
+	err = r.ApplyBattleResult(ctx, tx, AttackerVillageID, req.DefenderID, result)
+	if err != nil {
+		return models.BattleResult{}, err
+	}
+
+	err = tx.Commit(ctx)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
