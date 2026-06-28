@@ -75,6 +75,14 @@ function VillagePage() {
         fetchVillage();
     }, []);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchVillage();
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     function handleSelectBuilding(building) {
        if (selectedBuilding?.id===building.id) {
         setSelectedBuilding(null);
