@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = NEXT_PUBLIC_API_URL;
 
 export async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");

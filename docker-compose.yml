@@ -30,6 +30,7 @@ services:
       DB_URI: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-assignment_mvc}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-changeme}
       SEED_DB: ${SEED_DB:-true}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8080:8080"
 
@@ -41,7 +42,7 @@ services:
     depends_on:
       - backend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
     ports:
       - "3000:3000"
 
