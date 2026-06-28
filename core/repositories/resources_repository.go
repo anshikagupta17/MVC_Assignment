@@ -13,17 +13,17 @@ type CollectedResources struct {
 	Elixir int
 }
 
-func (r *VillageRepository) CollectResources(village_id int64) (CollectedResources, error) {
-	ctx := context.Background()
+func CollectResources(ctx context.Context, db DBExecutor, village_id int64) (CollectedResources, error) {
 	var gold, elixir int
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT gold, elixir
 		FROM villages
-		WHERE id = $1`, village_id).Scan(&gold, &elixir)
+		WHERE id = $1
+		FOR UPDATE`, village_id).Scan(&gold, &elixir)
 	if err != nil {
 		return CollectedResources{}, err
 	}
-	rows, err := r.DB.Query(ctx,
+	rows, err := db.Query(ctx,
 		`SELECT b.id, b.level, b.building_id, b.last_collected_at, b.upgrade_ends_at,
 		m.type_id, m.production_rate
 		FROM buildings_village b
@@ -85,7 +85,7 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 			new_elixir += gain
 		}
 	}
-	s_rows, err := r.DB.Query(ctx,
+	s_rows, err := db.Query(ctx,
 		`SELECT b.building_id,
 		s.max_capacity
 		FROM buildings_village b
@@ -132,13 +132,7 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		new_elixir = max(0, new_elixir)
 	}
 
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return CollectedResources{}, err
-	}
-	defer tx.Rollback(ctx)
-
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE villages
 		SET gold = gold + $1,
 			elixir = elixir + $2
@@ -148,7 +142,7 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		return CollectedResources{}, err
 	}
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE buildings_village
 		SET last_collected_at = $1
 		WHERE village_id = $2 AND building_id IN (6,7) AND upgrade_ends_at IS NULL
@@ -158,12 +152,29 @@ func (r *VillageRepository) CollectResources(village_id int64) (CollectedResourc
 		return CollectedResources{}, err
 	}
 
+	return CollectedResources{
+		Gold:   new_gold,
+		Elixir: new_elixir}, nil
+}
+
+func (r *VillageRepository) CollectVillageResources(village_id int64) (CollectedResources, error) {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return CollectedResources{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	result, err := CollectResources(ctx, tx, village_id)
+	if err != nil {
+		return CollectedResources{}, err
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		return CollectedResources{}, err
 	}
 
-	return CollectedResources{
-		Gold:   new_gold,
-		Elixir: new_elixir}, nil
+	return result, nil
 }

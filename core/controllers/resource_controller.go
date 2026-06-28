@@ -28,7 +28,7 @@ func ResourceCollection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Village not found", http.StatusBadRequest)
 		return
 	}
-	collected_resources, err := repo.CollectResources(village.ID)
+	collected_resources, err := repo.CollectVillageResources(village.ID)
 	if err != nil {
 		http.Error(w, "Collected resources not found", http.StatusInternalServerError)
 		return
