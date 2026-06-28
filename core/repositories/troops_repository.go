@@ -13,12 +13,25 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 
 	var townhall_level int
 	var elixir int
-	var housing_space int
 
 	err := r.DB.QueryRow(ctx,
-		`SELECT townhall_level, elixir, housing_space
+		`SELECT townhall_level, elixir
 		FROM villages
-		WHERE id = $1`, village_id).Scan(&townhall_level, &elixir, &housing_space)
+		WHERE id = $1`, village_id).Scan(&townhall_level, &elixir)
+
+	if err != nil {
+		return err
+	}
+	var housing_space int
+
+	err = r.DB.QueryRow(ctx,
+		`SELECT COALESCE(SUM(am.capacity), 0)
+		FROM buildings_village bv
+		JOIN army_metadata am
+			ON am.type_id = bv.building_id
+			AND am.level = bv.level
+		WHERE bv.village_id = $1
+		AND bv.building_id = 10`, village_id).Scan(&housing_space)
 
 	if err != nil {
 		return err
