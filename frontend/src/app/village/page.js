@@ -81,7 +81,7 @@ function VillagePage() {
         }, 10000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedBuilding]);
 
     function handleSelectBuilding(building) {
        if (selectedBuilding?.id===building.id) {
