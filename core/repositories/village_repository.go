@@ -76,7 +76,7 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
-	_ = r.CompleteUpgrades(village.ID)
+	_ = CompleteUpgrades(ctx, r.DB, village.ID)
 	err = r.CompleteTroopUpgrades(village.ID)
 	if err != nil {
 		return models.VillageResponse{}, err

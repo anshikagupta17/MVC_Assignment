@@ -196,8 +196,7 @@ func UpgradeBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repo.BuildingUpgrade(village.ID, req.BuildingInstanceID)
-
+	err = repo.BuildingUpgradeTX(village.ID, req.BuildingInstanceID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

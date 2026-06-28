@@ -251,23 +251,22 @@ func (r *VillageRepository) CanPlaceNewBuilding(village_id int64, building_id in
 
 }
 
-func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_id int64) error {
-	err := r.CompleteUpgrades(village_id)
+func BuildingUpgrade(ctx context.Context, db DBExecutor, village_id int64, building_instance_id int64) error {
+	err := CompleteUpgrades(ctx, db, village_id)
 	if err != nil {
 		return err
 	}
-
-	ctx := context.Background()
 
 	var building_id int64
 	var level int
 	var upgrade_ends_at pgtype.Timestamp
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT building_id, level, upgrade_ends_at
 		FROM buildings_village
 		WHERE id = $1
-		AND village_id = $2`, building_instance_id, village_id).Scan(&building_id, &level, &upgrade_ends_at)
+		AND village_id = $2
+		FOR UPDATE`, building_instance_id, village_id).Scan(&building_id, &level, &upgrade_ends_at)
 
 	if err != nil {
 		return err
@@ -278,7 +277,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 	}
 
 	var upgradingCount int
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT COUNT(*)
     	FROM buildings_village
     	WHERE village_id = $1
@@ -293,10 +292,11 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 	}
 
 	var townhall_level int
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT townhall_level
 		FROM villages
-		WHERE id = $1`, village_id).Scan(&townhall_level)
+		WHERE id = $1
+		FOR UPDATE`, village_id).Scan(&townhall_level)
 
 	log.Println("village_id:", village_id, "building_instance_id:", building_instance_id)
 
@@ -315,7 +315,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 
 	var metadata BuildingMetadata
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT upgrade_cost, cost_type, upgrade_time_sec
 		FROM buildings_metadata
 		WHERE id = $1`,
@@ -327,7 +327,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 
 	var resources VillageResources
 
-	err = r.DB.QueryRow(
+	err = db.QueryRow(
 		ctx,
 		`SELECT gold, elixir
 		FROM villages
@@ -337,12 +337,6 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 		return err
 	}
 
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
 	switch metadata.CostType {
 
 	case "Gold":
@@ -351,7 +345,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 			return errors.New("Not enough gold")
 		}
 
-		_, err = tx.Exec(ctx,
+		_, err = db.Exec(ctx,
 			`UPDATE villages
 			SET gold = gold - $1
 			WHERE id = $2`, metadata.UpgradeCost, village_id)
@@ -362,7 +356,7 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 			return errors.New("Not enough elixir")
 		}
 
-		_, err = tx.Exec(ctx,
+		_, err = db.Exec(ctx,
 			`UPDATE villages
 			SET elixir = elixir - $1
 			WHERE id = $2`, metadata.UpgradeCost, village_id)
@@ -374,32 +368,23 @@ func (r *VillageRepository) BuildingUpgrade(village_id int64, building_instance_
 	if err != nil {
 		return err
 	}
-	log.Println("upgrade_time_sec =", metadata.UpgradeTimeSec)
 	finish_time := time.Now().Add(
 		time.Duration(metadata.UpgradeTimeSec) * time.Second,
 	)
-	log.Println("finish_time =", finish_time)
 
-	_, err = tx.Exec(
+	_, err = db.Exec(
 		ctx,
 		`UPDATE buildings_village
 		SET upgrade_ends_at = $1
 		WHERE id = $2`, finish_time, building_instance_id)
 
-	return tx.Commit(ctx)
+	return err
 }
 
-func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
-
-	ctx := context.Background()
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
+func CompleteUpgrades(ctx context.Context, db DBExecutor, village_id int64) error {
 	var completedTownhall int
 
-	err = tx.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT COUNT(*)
 		FROM buildings_village
 		WHERE village_id = $1
@@ -414,7 +399,7 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 	}
 
 	if completedTownhall > 0 {
-		_, err = tx.Exec(ctx,
+		_, err = db.Exec(ctx,
 			`UPDATE villages
 			SET townhall_level = townhall_level + 1
 			WHERE id = $1`,
@@ -425,7 +410,7 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE buildings_village
 		SET
 			level = level + 1,
@@ -434,6 +419,23 @@ func (r *VillageRepository) CompleteUpgrades(village_id int64) error {
 		AND upgrade_ends_at IS NOT NULL
 		AND upgrade_ends_at <= NOW()`, village_id)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *VillageRepository) BuildingUpgradeTX(village_id int64, building_instance_id int64) error {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	err = BuildingUpgrade(ctx, tx, village_id, building_instance_id)
 	if err != nil {
 		return err
 	}
