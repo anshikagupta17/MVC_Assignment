@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/anshikagupta17/MVC_Assignment/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/joho/godotenv"
@@ -37,10 +36,4 @@ func InitDB() {
 	Conn = conn
 	log.Println("DB connected")
 
-	if os.Getenv("SEED_DB") == "true" {
-		err = db.SeedAll(conn)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/controllers"
 	DB "github.com/anshikagupta17/MVC_Assignment/core/database"
@@ -49,8 +50,10 @@ func Routes() {
 func main() {
 
 	DB.InitDB()
-	if err := db.SeedAll(DB.Conn); err != nil {
-		log.Fatal(err)
+	if os.Getenv("SEED_DB") == "true" {
+		if err := db.SeedAll(DB.Conn); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	Routes()
