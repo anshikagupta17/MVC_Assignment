@@ -165,8 +165,8 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	var upgrade_ends_at *time.Time
 	err := r.DB.QueryRow(ctx,
 		`SELECT level, quantity, upgrade_ends_at
-	FROM troops_village
-	WHERE village_id=$1 AND troops_id=$2`,
+		FROM troops_village
+		WHERE village_id=$1 AND troops_id=$2`,
 		village_id, troops_id).Scan(&level, &quantity, &upgrade_ends_at)
 	if err != nil {
 		return err
@@ -178,8 +178,8 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	var townhall_level, elixir int
 	err = r.DB.QueryRow(ctx,
 		`SELECT townhall_level, elixir
-	FROM villages
-	WHERE id=$1`, village_id).Scan(&townhall_level, &elixir)
+		FROM villages
+		WHERE id=$1`, village_id).Scan(&townhall_level, &elixir)
 
 	if err != nil {
 		return err
@@ -192,7 +192,7 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	var cost int64
 	err = r.DB.QueryRow(ctx,
 		`SELECT upgrade_cost from troops_level_metadata
-	WHERE level= level+1 AND type_id=$1,`, troops_id).Scan(&cost)
+	WHERE level= $1 AND type_id=$2`, level+1, troops_id).Scan(&cost)
 	if err != nil {
 		return err
 	}
