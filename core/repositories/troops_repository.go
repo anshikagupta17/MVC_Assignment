@@ -203,23 +203,23 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	}
 	defer tx.Rollback(ctx)
 
-	var troop_cost int64 = cost
-	if int64(elixir) < (troop_cost) {
+	if int64(elixir) < (cost) {
 		return errors.New("Not enough elixir")
 	}
 
 	_, err = tx.Exec(ctx,
 		`UPDATE villages
 			SET elixir = elixir - $1
-			WHERE id = $2`, troop_cost, village_id)
+			WHERE id = $2`, cost, village_id)
 
 	if err != nil {
 		return err
 	}
 	var upgradeTimeSec int
 	err = r.DB.QueryRow(ctx,
-		`SELECT upgrade_time_sec from troops_base_metadata
-	WHERE level= $1+1 AND id=$2`, level, troops_id).Scan(&upgradeTimeSec)
+		`SELECT upgrade_time_sec 
+		FROM troops_base_metadata
+		WHERE id=$1`, troops_id).Scan(&upgradeTimeSec)
 	if err != nil {
 		return err
 	}
