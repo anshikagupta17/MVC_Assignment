@@ -159,14 +159,14 @@ func (r *VillageRepository) GetVillageTroops(village_id int64) ([]models.Village
 	return troops, nil
 }
 
-func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error {
-	ctx := context.Background()
+func UpgradeTroops(ctx context.Context, db DBExecutor, village_id int64, troops_id int) error {
 	var level, quantity int
 	var upgrade_ends_at *time.Time
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT level, quantity, upgrade_ends_at
 		FROM troops_village
-		WHERE village_id=$1 AND troops_id=$2`,
+		WHERE village_id=$1 AND troops_id=$2
+		FOR UPDATE`,
 		village_id, troops_id).Scan(&level, &quantity, &upgrade_ends_at)
 	if err != nil {
 		return err
@@ -176,10 +176,11 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 		return errors.New("Troops already upgrading")
 	}
 	var townhall_level, elixir int
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT townhall_level, elixir
 		FROM villages
-		WHERE id=$1`, village_id).Scan(&townhall_level, &elixir)
+		WHERE id=$1
+		FOR UPDATE`, village_id).Scan(&townhall_level, &elixir)
 
 	if err != nil {
 		return err
@@ -190,24 +191,18 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	}
 
 	var cost int64
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT upgrade_cost from troops_level_metadata
-	WHERE level= $1 AND type_id=$2`, level+1, troops_id).Scan(&cost)
+		WHERE level= $1 AND type_id=$2`, level+1, troops_id).Scan(&cost)
 	if err != nil {
 		return err
 	}
-
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
 
 	if int64(elixir) < (cost) {
 		return errors.New("Not enough elixir")
 	}
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE villages
 			SET elixir = elixir - $1
 			WHERE id = $2`, cost, village_id)
@@ -216,7 +211,7 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 		return err
 	}
 	var upgradeTimeSec int
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT upgrade_time_sec 
 		FROM troops_base_metadata
 		WHERE id=$1`, troops_id).Scan(&upgradeTimeSec)
@@ -228,7 +223,7 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 		time.Duration(upgradeTimeSec) * time.Second,
 	)
 
-	_, err = tx.Exec(
+	_, err = db.Exec(
 		ctx,
 		`UPDATE troops_village
 		SET upgrade_ends_at = $1
@@ -242,8 +237,25 @@ func (r *VillageRepository) UpgradeTroops(village_id int64, troops_id int) error
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	return nil
 
+}
+
+func (r *VillageRepository) UpgradeTroopsTX(village_id int64, troops_id int) error {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	err = UpgradeTroops(ctx, tx, village_id, troops_id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *VillageRepository) CompleteTroopUpgrades(village_id int64) error {

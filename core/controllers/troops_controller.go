@@ -34,7 +34,7 @@ func UpgradeTroops(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repo.UpgradeTroops(village.ID, req.TroopID)
+	err = repo.UpgradeTroopsTX(village.ID, req.TroopID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
