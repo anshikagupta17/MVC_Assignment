@@ -233,8 +233,11 @@ export default function BattlePage() {
                                         backgroundImage: `
                                             linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
                                             linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+                                            url('/assets/grass.jpeg')
                                         `,
-                                        backgroundSize: "10px 10px",
+                                        backgroundSize: "10px 10px, 10px 10px",
+                                        backgroundColor: "#3F704D",
+                                        backgroundRepeat: "repeat",
                                     }}
                                 >
                                     {opponent.buildings?.map((b) => (

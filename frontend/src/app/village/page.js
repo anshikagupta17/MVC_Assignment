@@ -381,7 +381,7 @@ function VillagePage() {
             </div>
 
             <div className="fixed top-4 left-4 z-20 flex gap-6 items-center">
-                <div className="bg-black/70 text-white rounded-full px-4 py-2 flex gap-6 items-center">
+                <div className="bg-[#FFBF65]/70 text-black rounded-full px-4 py-2 flex gap-6 items-center">
                     <span>Gold: {village.gold}</span>
                     <span>Elixir: {village.elixir}</span>
                     <span>Trophies: {village.trophies}</span>
@@ -389,7 +389,7 @@ function VillagePage() {
 
                 <button
                     onClick={handleLogout}
-                    className="bg-black/70 rounded-full w-10 h-10 flex items-center justify-center"
+                    className="bg-[#FFBF65]/70 rounded-full w-10 h-10 flex items-center justify-center"
                 >
                     <Image
                         src="/assets/logout3.png"
@@ -400,19 +400,19 @@ function VillagePage() {
                 </button>
             </div>
 
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 text-white rounded-full px-4 py-2">
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-[#FFBF65]/70 text-black rounded-full px-4 py-2">
                 Townhall Lv {village.townhall_level}
             </div>
 
             <Link href="/battle" className="fixed top-4 right-4 z-20">
-                <button className="bg-red-500 text-white rounded-full px-4 py-2">
+                <button className="btn-pixel bg-[#DCD7A0] text-black rounded px-4 py-2">
                     Battle
                 </button>
             </Link>
 
             <button
                 onClick={openShop}
-                className="fixed bottom-4 right-4 z-20 bg-blue-500 text-white rounded-full px-4 py-2"
+                className="btn-pixel fixed bottom-4 right-4 z-20 bg-[#4B3621] text-white rounded-full px-4 py-2"
             >
                 Shop
             </button>
