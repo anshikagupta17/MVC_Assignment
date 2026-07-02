@@ -267,7 +267,7 @@ func (r *VillageRepository) ApplyBattleResult(ctx context.Context, db DBExecutor
 		SET
 			gold = gold + $1,
 			elixir = elixir + $2,
-			trophies = GREATEST(trophies + $3)
+			trophies = GREATEST(0,trophies + $3)
 		WHERE id = $4`, result.LootGold, result.LootElixir, result.TrophyChange, AttackerVillageID)
 	if err != nil {
 		return err
@@ -276,8 +276,8 @@ func (r *VillageRepository) ApplyBattleResult(ctx context.Context, db DBExecutor
 	_, err = db.Exec(ctx,
 		`UPDATE villages
 		SET
-			gold = gold - $1,
-			elixir = elixir - $2,
+			gold = GREATEST(0,gold - $1),
+			elixir = GREATEST(0,elixir - $2),
 			trophies = GREATEST(0, trophies - $3)
 		WHERE id = $4`, result.LootGold, result.LootElixir, result.TrophyChange, DefenderVillageID)
 	if err != nil {
