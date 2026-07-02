@@ -122,6 +122,11 @@ func CollectResources(ctx context.Context, db DBExecutor, village_id int64) (Col
 			elixir_cap += capacity
 		}
 	}
+
+	if err := rows.Err(); err != nil {
+		return CollectedResources{}, err
+	}
+
 	if gold+new_gold > gold_cap {
 		new_gold = gold_cap - gold
 		new_gold = max(0, new_gold)
