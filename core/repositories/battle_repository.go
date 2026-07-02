@@ -47,6 +47,12 @@ func (r *VillageRepository) FindOpponent(village_ID int64) (*models.MatchmakingR
 	if err != nil {
 		return nil, err
 	}
+	buildings, err := r.GetOpponentBuildings(opponent.VillageID)
+	if err != nil {
+		return nil, err
+	}
+
+	opponent.Buildings = buildings
 
 	return &opponent, nil
 }
