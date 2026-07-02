@@ -261,7 +261,7 @@ func ConsumeTroops(ctx context.Context, db DBExecutor, village_id int64, deploye
 
 }
 
-func (r *VillageRepository) ApplyBattleResult(ctx context.Context, db DBExecutor, AttackerVillageID int64, DefenderVillageID int64, result models.BattleResult) error {
+func ApplyBattleResult(ctx context.Context, db DBExecutor, AttackerVillageID int64, DefenderVillageID int64, result models.BattleResult) error {
 	_, err := db.Exec(ctx,
 		`UPDATE villages
 		SET
@@ -352,7 +352,7 @@ func (r *VillageRepository) AttackVillage(AttackerVillageID int64, req models.At
 		return models.BattleResult{}, err
 	}
 
-	err = r.ApplyBattleResult(ctx, tx, AttackerVillageID, req.DefenderID, result)
+	err = ApplyBattleResult(ctx, tx, AttackerVillageID, req.DefenderID, result)
 	if err != nil {
 		return models.BattleResult{}, err
 	}
@@ -399,6 +399,9 @@ func (r *VillageRepository) GetOpponentBuildings(village_id int64) ([]models.Vil
 		}
 
 		result = append(result, b)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil
