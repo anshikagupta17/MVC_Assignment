@@ -10,7 +10,7 @@ type VillageTroop struct {
 }
 
 type UpgradeTroopRequest struct {
-	TroopID int `json:"troop_id"`
+	TroopID int64 `json:"troop_id"`
 }
 
 type TrainTroopsRequest struct {

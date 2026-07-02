@@ -128,9 +128,9 @@ func (r *VillageRepository) GetVillageTroops(village_id int64) ([]models.Village
 	rows, err := r.DB.Query(ctx,
 		`SELECT
 			tv.troops_id,
-			tb.name,
 			tv.level,
 			tv.quantity,
+			tb.name,
 			tlm.damage,
 			tlm.max_health
 		FROM troops_village tv
@@ -154,9 +154,9 @@ func (r *VillageRepository) GetVillageTroops(village_id int64) ([]models.Village
 
 		err := rows.Scan(
 			&t.TroopID,
-			&t.Name,
 			&t.Level,
 			&t.Quantity,
+			&t.Name,
 			&t.Damage,
 			&t.MaxHealth,
 		)
@@ -167,11 +167,14 @@ func (r *VillageRepository) GetVillageTroops(village_id int64) ([]models.Village
 
 		troops = append(troops, t)
 	}
+	if err := rows.Err(); err != nil {
+		return []models.VillageTroop{}, err
+	}
 
 	return troops, nil
 }
 
-func UpgradeTroops(ctx context.Context, db DBExecutor, village_id int64, troops_id int) error {
+func UpgradeTroops(ctx context.Context, db DBExecutor, village_id int64, troops_id int64) error {
 	var level, quantity int
 	var upgrade_ends_at *time.Time
 	err := db.QueryRow(ctx,
@@ -253,7 +256,7 @@ func UpgradeTroops(ctx context.Context, db DBExecutor, village_id int64, troops_
 
 }
 
-func (r *VillageRepository) UpgradeTroopsTX(village_id int64, troops_id int) error {
+func (r *VillageRepository) UpgradeTroopsTX(village_id int64, troops_id int64) error {
 	ctx := context.Background()
 
 	tx, err := r.DB.Begin(ctx)
