@@ -77,7 +77,7 @@ func TrainTroops(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repo.TrainTroops(village.ID, req.TroopID, req.Quantity)
+	err = repo.TrainTroopsTX(village.ID, req.TroopID, req.Quantity)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

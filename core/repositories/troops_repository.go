@@ -8,23 +8,22 @@ import (
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
 )
 
-func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quantity int) error {
-	ctx := context.Background()
-
+func TrainTroops(ctx context.Context, db DBExecutor, village_id int64, troop_id int64, quantity int) error {
 	var townhall_level int
 	var elixir int
 
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT townhall_level, elixir
 		FROM villages
-		WHERE id = $1`, village_id).Scan(&townhall_level, &elixir)
+		WHERE id = $1
+		FOR UPDATE`, village_id).Scan(&townhall_level, &elixir)
 
 	if err != nil {
 		return err
 	}
 	var housing_space int
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT COALESCE(SUM(am.capacity), 0)
 		FROM buildings_village bv
 		JOIN army_metadata am
@@ -41,7 +40,7 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 	var training_cost int
 	var housing_one int
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT unlock_level, training_cost, housing_space
 		FROM troops_base_metadata
 		WHERE id = $1`, troop_id).Scan(&unlock_level, &training_cost, &housing_one)
@@ -56,12 +55,13 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 
 	var used_space int
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT COALESCE(SUM(tv.quantity * tb.housing_space),0)
 		FROM troops_village tv
 		JOIN troops_base_metadata tb
 		ON tb.id = tv.troops_id
-		WHERE tv.village_id = $1`, village_id).Scan(&used_space)
+		WHERE tv.village_id = $1
+		FOR UPDATE OF tv`, village_id).Scan(&used_space)
 
 	if err != nil {
 		return err
@@ -77,13 +77,8 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 	if elixir < totalCost {
 		return errors.New("Not enough Elixir")
 	}
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`UPDATE villages
 		SET elixir = elixir - $1
 		WHERE id = $2`, totalCost, village_id)
@@ -92,7 +87,7 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 		return err
 	}
 
-	_, err = tx.Exec(ctx,
+	_, err = db.Exec(ctx,
 		`INSERT INTO troops_village
 		(village_id, troops_id, level, quantity)
 		VALUES ($1,$2,1,$3)
@@ -103,8 +98,25 @@ func (r *VillageRepository) TrainTroops(village_id int64, troop_id int64, quanti
 		return err
 	}
 
-	return tx.Commit(ctx)
+	return nil
 
+}
+
+func (r *VillageRepository) TrainTroopsTX(village_id int64, troops_id int64, quantity int) error {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	err = TrainTroops(ctx, tx, village_id, troops_id, quantity)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *VillageRepository) GetVillageTroops(village_id int64) ([]models.VillageTroop, error) {
