@@ -193,11 +193,6 @@ export default function BattlePage() {
                 </div>
             )}
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-4xl font-bold tracking-wide "
-                style={{ fontFamily: "serif" }}
-                >
-                    Battle
-                </h1>
                 <Link href="/village">
                     <button className="bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e] px-4 py-2 rounded hover:bg-[#5a2e00]">
                         Back to Village
@@ -232,14 +227,14 @@ export default function BattlePage() {
                                 <div
                                     className="relative mx-auto overflow-hidden border border-[#8B5E3C]"
                                     style={{
-                                        width: "400px",
-                                        height: "400px",
+                                        width: "500px",
+                                        height: "500px",
                                         backgroundColor: "#3F704D",
                                         backgroundImage: `
                                             linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
                                             linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
                                         `,
-                                        backgroundSize: "8px 8px",
+                                        backgroundSize: "10px 10px",
                                     }}
                                 >
                                     {opponent.buildings?.map((b) => (
@@ -247,10 +242,10 @@ export default function BattlePage() {
                                             key={b.id}
                                             className="absolute"
                                             style={{
-                                                left: `${b.x * 8}px`,
-                                                top: `${b.y * 8}px`,
-                                                width: `${b.size_x * 8}px`,
-                                                height: `${b.size_y * 8}px`,
+                                                left: `${b.x * 10}px`,
+                                                top: `${b.y * 10}px`,
+                                                width: `${b.size_x * 10}px`,
+                                                height: `${b.size_y * 10}px`,
                                             }}
                                         >
                                             <img
