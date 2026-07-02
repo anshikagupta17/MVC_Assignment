@@ -286,17 +286,24 @@ func (r *VillageRepository) CompleteTroopUpgrades(village_id int64) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	var completed_ids []int64
 
 	for rows.Next() {
-
 		var troop_id int64
-
 		err := rows.Scan(&troop_id)
 		if err != nil {
+			rows.Close()
 			return err
 		}
+		completed_ids = append(completed_ids, troop_id)
+	}
+	rows.Close()
 
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	for _, troop_id := range completed_ids {
 		_, err = r.DB.Exec(ctx,
 			`UPDATE troops_village
 			SET level = level + 1,
