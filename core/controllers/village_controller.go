@@ -82,17 +82,6 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	check, err := repo.CanPlaceBuilding(village.ID, req.BuildingInstanceId, req.X, req.Y)
-	if err != nil {
-		http.Error(w, "Error checking placement", http.StatusInternalServerError)
-		return
-	}
-
-	if !check {
-		http.Error(w, "Position blocked by another building", http.StatusBadRequest)
-		return
-	}
-
 	err = repo.MoveBuilding(village.ID, req.BuildingInstanceId, req.X, req.Y)
 	if err != nil {
 		http.Error(w, "Failed to move building", http.StatusInternalServerError)
@@ -129,12 +118,7 @@ func AddBuilding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repo.AddBuilding(
-		village.ID,
-		req.BuildingID,
-		req.X,
-		req.Y,
-	)
+	err = repo.AddBuildingTX(village.ID, req.BuildingID, req.X, req.Y)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -166,7 +150,7 @@ func GetVillageTroops(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(troops)
 }
 

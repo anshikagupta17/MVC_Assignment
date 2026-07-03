@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
@@ -60,6 +59,10 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 
 		result = append(result, building)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return result, nil
 }
 func (r *VillageRepository) InitialBuildings(village_id int64) error {
@@ -94,80 +97,49 @@ func (r *VillageRepository) MoveBuilding(village_id, building_instance_id int64,
 	return err
 }
 
-func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id int64, x, y int) (bool, error) {
-	ctx := context.Background()
-	var buildingID int64
+func CanPlace(ctx context.Context, db DBExecutor, village_id int64, size_x int, size_y int, x int, y int, skip_instance_id int64) (bool, error) {
+	if x+size_x-1 > 49 || y+size_y-1 > 49 {
+		return false, nil
+	}
 
-	err := r.DB.QueryRow(
-		ctx,
-		`SELECT building_id
-		FROM buildings_village
-		WHERE id = $1`, building_instance_id).Scan(&buildingID)
+	rows, err := db.Query(ctx,
+		`SELECT bv.id, bv.x, bv.y, bm.size_x, bm.size_y
+		FROM buildings_village bv
+		JOIN buildings_metadata bm ON bm.id = bv.building_id
+		WHERE bv.village_id = $1`, village_id)
 
 	if err != nil {
 		return false, err
 	}
-
-	var sizex, sizey int
-
-	err = r.DB.QueryRow(
-		ctx,
-		`SELECT size_x, size_y
-		FROM buildings_metadata
-		WHERE id = $1`, buildingID).Scan(&sizex, &sizey)
-
-	if err != nil {
-		return false, err
-	}
-
-	rows, err := r.DB.Query(ctx,
-		`SELECT id, building_id, x, y
-		FROM buildings_village
-		WHERE village_id = $1`, village_id)
-
-	if err != nil {
-		return false, err
-	}
-
 	defer rows.Close()
 
 	newX1 := x
 	newY1 := y
-	newX2 := x + sizex - 1
-	newY2 := y + sizey - 1
+	newX2 := x + size_x - 1
+	newY2 := y + size_y - 1
 
 	for rows.Next() {
-
 		var instance_id int64
-		var b_id int
-		var current_x, current_y int
+		var current_x, current_y, current_sizex, current_sizey int
 
 		err := rows.Scan(
 			&instance_id,
-			&b_id,
 			&current_x,
 			&current_y,
+			&current_sizex,
+			&current_sizey,
 		)
 		if err != nil {
 			return false, err
 		}
-		if instance_id == building_instance_id {
+
+		if instance_id == skip_instance_id {
 			continue
 		}
 
-		var current_sizex, current_sizey int
-		err = r.DB.QueryRow(ctx,
-			`SELECT size_x, size_y 
-			FROM buildings_metadata 
-			WHERE id=$1`, b_id).Scan(&current_sizex, &current_sizey)
-
-		if err != nil {
-			return false, err
-		}
-
 		currentX1 := current_x
-		currentX2 := current_x + current_sizex - 1
 		currentY1 := current_y
+		currentX2 := current_x + current_sizex - 1
 		currentY2 := current_y + current_sizey - 1
 
 		if !(newX2 < currentX1 || newX1 > currentX2 || newY2 < currentY1 || newY1 > currentY2) {
@@ -175,82 +147,12 @@ func (r *VillageRepository) CanPlaceBuilding(village_id, building_instance_id in
 		}
 	}
 
-	return true, nil
-}
-
-func (r *VillageRepository) CanPlaceNewBuilding(village_id int64, building_id int64, x int, y int) (bool, error) {
-	ctx := context.Background()
-	var sizex, sizey int
-
-	err := r.DB.QueryRow(ctx,
-		`SELECT size_x, size_y
-		FROM buildings_metadata
-		WHERE id = $1`, building_id).Scan(&sizex, &sizey)
-
-	if err != nil {
+	if err := rows.Err(); err != nil {
 		return false, err
 	}
 
-	rows, err := r.DB.Query(
-		ctx,
-		`SELECT id, building_id, x, y
-		FROM buildings_village
-		WHERE village_id = $1`, village_id,
-	)
-
-	if err != nil {
-		return false, err
-	}
-
-	defer rows.Close()
-
-	newX1 := x
-	newY1 := y
-	newX2 := x + sizex - 1
-	newY2 := y + sizey - 1
-
-	for rows.Next() {
-
-		var instance_id int64
-		var CurrentBuildingId int64
-		var current_x, current_y int
-
-		err := rows.Scan(
-			&instance_id,
-			&CurrentBuildingId,
-			&current_x,
-			&current_y,
-		)
-
-		if err != nil {
-			return false, err
-		}
-
-		var current_size_x, current_size_y int
-
-		err = r.DB.QueryRow(ctx,
-			`SELECT size_x, size_y
-			FROM buildings_metadata
-			WHERE id = $1`, CurrentBuildingId).Scan(&current_size_x, &current_size_y)
-
-		if err != nil {
-			return false, err
-		}
-
-		currentX1 := current_x
-		currentY1 := current_y
-		currentX2 := current_x + current_size_x - 1
-		currentY2 := current_y + current_size_y - 1
-
-		if !(newX2 < currentX1 || newX1 > currentX2 || newY2 < currentY1 || newY1 > currentY2) {
-			return false, nil
-		}
-	}
-
 	return true, nil
-
 }
-
 func BuildingUpgrade(ctx context.Context, db DBExecutor, village_id int64, building_instance_id int64) error {
 	err := CompleteUpgrades(ctx, db, village_id)
 	if err != nil {
@@ -279,9 +181,10 @@ func BuildingUpgrade(ctx context.Context, db DBExecutor, village_id int64, build
 	var upgradingCount int
 	err = db.QueryRow(ctx,
 		`SELECT COUNT(*)
-    	FROM buildings_village
-    	WHERE village_id = $1
-    	AND upgrade_ends_at IS NOT NULL`, village_id).Scan(&upgradingCount)
+		FROM buildings_village
+		WHERE village_id = $1
+		AND upgrade_ends_at IS NOT NULL
+		AND id != $2`, village_id, building_instance_id).Scan(&upgradingCount)
 
 	if err != nil {
 		return err
@@ -292,13 +195,13 @@ func BuildingUpgrade(ctx context.Context, db DBExecutor, village_id int64, build
 	}
 
 	var townhall_level int
+	var resources VillageResources
+
 	err = db.QueryRow(ctx,
-		`SELECT townhall_level
+		`SELECT townhall_level, gold, elixir
 		FROM villages
 		WHERE id = $1
-		FOR UPDATE`, village_id).Scan(&townhall_level)
-
-	log.Println("village_id:", village_id, "building_instance_id:", building_instance_id)
+		FOR UPDATE`, village_id).Scan(&townhall_level, &resources.Gold, &resources.Elixir)
 
 	if err != nil {
 		return err
@@ -320,18 +223,6 @@ func BuildingUpgrade(ctx context.Context, db DBExecutor, village_id int64, build
 		FROM buildings_metadata
 		WHERE id = $1`,
 		building_id).Scan(&metadata.UpgradeCost, &metadata.CostType, &metadata.UpgradeTimeSec)
-
-	if err != nil {
-		return err
-	}
-
-	var resources VillageResources
-
-	err = db.QueryRow(
-		ctx,
-		`SELECT gold, elixir
-		FROM villages
-		WHERE id = $1`, village_id).Scan(&resources.Gold, &resources.Elixir)
 
 	if err != nil {
 		return err
@@ -401,7 +292,7 @@ func CompleteUpgrades(ctx context.Context, db DBExecutor, village_id int64) erro
 	if completedTownhall > 0 {
 		_, err = db.Exec(ctx,
 			`UPDATE villages
-			SET townhall_level = townhall_level + 1
+			SET townhall_level = LEAST(townhall_level + 1, 4)
 			WHERE id = $1`,
 			village_id,
 		)
@@ -452,14 +343,18 @@ func isDefense(id int64) bool {
 	}
 }
 
-func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x int, y int) error {
-	ctx := context.Background()
+func AddBuilding(ctx context.Context, db DBExecutor, village_id int64, building_id int64, x int, y int) error {
+	if x < 0 || x > 49 || y < 0 || y > 49 {
+		return errors.New("invalid position")
+	}
+
 	var townhall_level int
 
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`SELECT townhall_level
 		FROM villages
-		WHERE id = $1`, village_id).Scan(&townhall_level)
+		WHERE id = $1
+		FOR UPDATE`, village_id).Scan(&townhall_level)
 
 	if err != nil {
 		return err
@@ -467,11 +362,12 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	var cost int
 	var costType string
+	var sizex, sizey int
 
-	err = r.DB.QueryRow(ctx,
-		`SELECT upgrade_cost, cost_type
+	err = db.QueryRow(ctx,
+		`SELECT upgrade_cost, cost_type, size_x, size_y
 		FROM buildings_metadata
-		WHERE id = $1`, building_id).Scan(&cost, &costType)
+		WHERE id = $1`, building_id).Scan(&cost, &costType, &sizex, &sizey)
 
 	if err != nil {
 		return err
@@ -481,7 +377,7 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 		var unlock_level int
 
-		err = r.DB.QueryRow(ctx,
+		err = db.QueryRow(ctx,
 			`SELECT unlock_level
 			FROM defense_metadata
 			WHERE type_id = $1 AND level = 1`, building_id).Scan(&unlock_level)
@@ -497,7 +393,7 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	var max_quantity int
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT max_quantity
 		FROM building_limits
 		WHERE building_id = $1
@@ -509,7 +405,7 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	var current_quantity int
 
-	err = r.DB.QueryRow(ctx,
+	err = db.QueryRow(ctx,
 		`SELECT COUNT(*)
 		FROM buildings_village
 		WHERE village_id = $1
@@ -523,8 +419,7 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 		return errors.New("max quantity reached")
 	}
 
-	canPlace, err := r.CanPlaceNewBuilding(village_id, building_id, x, y)
-
+	canPlace, err := CanPlace(ctx, db, village_id, sizex, sizey, x, y, 0)
 	if err != nil {
 		return err
 	}
@@ -533,15 +428,9 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 		return errors.New("invalid placement")
 	}
 
-	tx, err := r.DB.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
 	if costType == "Gold" {
 
-		cmd, err := tx.Exec(ctx,
+		cmd, err := db.Exec(ctx,
 			`UPDATE villages
 			SET gold = gold - $1
 			WHERE id = $2
@@ -558,7 +447,7 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	if costType == "Elixir" {
 
-		cmd, err := tx.Exec(ctx,
+		cmd, err := db.Exec(ctx,
 			`UPDATE villages
 			SET elixir = elixir - $1
 			WHERE id = $2 AND elixir >= $1`, cost, village_id)
@@ -574,14 +463,14 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 
 	if building_id == 6 || building_id == 7 {
 
-		_, err = tx.Exec(ctx,
+		_, err = db.Exec(ctx,
 			`INSERT INTO buildings_village
     	(village_id, building_id, level, x, y, last_collected_at)
     	VALUES ($1,$2,1,$3,$4,NOW())`, village_id, building_id, x, y)
 
 	} else {
 
-		_, err = tx.Exec(
+		_, err = db.Exec(
 			ctx,
 			`INSERT INTO buildings_village
 			(village_id,building_id,level,x,y)
@@ -593,8 +482,25 @@ func (r *VillageRepository) AddBuilding(village_id int64, building_id int64, x i
 		return err
 	}
 
-	return tx.Commit(ctx)
+	return nil
 
+}
+
+func (r *VillageRepository) AddBuildingTX(village_id int64, building_id int64, x int, y int) error {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	err = AddBuilding(ctx, tx, village_id, building_id, x, y)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *VillageRepository) GetShopBuildings(village_id int64) ([]models.ShopBuilding, error) {
@@ -661,6 +567,9 @@ func (r *VillageRepository) GetShopBuildings(village_id int64) ([]models.ShopBui
 		}
 
 		result = append(result, b)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil
