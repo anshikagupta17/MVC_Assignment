@@ -381,7 +381,13 @@ function VillagePage() {
             </div>
 
             <div className="fixed top-4 left-4 z-20 flex gap-6 items-center">
-                <div className="bg-[#FFBF65]/70 text-black rounded-full px-4 py-2 flex gap-6 items-center">
+                <div className="flex gap-6 items-center px-6 py-2 rounded-full "
+                    style={{
+                        backgroundColor: "#DCD7A0",
+                        color: "black",
+                        fontFamily: "var(--font-pixel)",
+                        fontSize: "10px",
+                    }}>
                     <span>Gold: {village.gold}</span>
                     <span>Elixir: {village.elixir}</span>
                     <span>Trophies: {village.trophies}</span>
@@ -389,7 +395,7 @@ function VillagePage() {
 
                 <button
                     onClick={handleLogout}
-                    className="bg-[#FFBF65]/70 rounded-full w-10 h-10 flex items-center justify-center"
+                    className="bg-[#DCD7A0] rounded-full w-10 h-10 flex items-center justify-center"
                 >
                     <Image
                         src="/assets/logout3.png"
@@ -400,12 +406,25 @@ function VillagePage() {
                 </button>
             </div>
 
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-[#FFBF65]/70 text-black rounded-full px-4 py-2">
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center"
+                style={{
+                    backgroundImage: "url('/assets/button1.png')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    fontFamily: "var(--font-pixel)",
+                    fontSize: "11px",
+                    color: "white",
+                    height: "52px",
+                    minWidth: "200px",
+                    paddingLeft: "24px",
+                    paddingRight: "24px",
+                }} >
                 Townhall Lv {village.townhall_level}
             </div>
 
             <Link href="/battle" className="fixed top-4 right-4 z-20">
-                <button className="btn-pixel bg-[#DCD7A0] text-black rounded px-4 py-2">
+                <button className="btn-pixel bg-[#DCD7A0] text-black rounded-full px-4 py-2">
                     Battle
                 </button>
             </Link>
@@ -466,43 +485,85 @@ function VillagePage() {
 
             {showShop && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className=" text-[yellow] p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">Shop</h2>
+                    <div
+                        className="p-6 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                        style={{ backgroundColor: "#2a1200", border: "2px solid #8B5E3C" }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold" style={{ color: "#f5c96e" }}>
+                                Shop
+                            </h2>
+                            <button
+                                onClick={() => setShowShop(false)}
+                                style={{
+                                    backgroundColor: "#3d1f00",
+                                    border: "2px solid #8B5E3C",
+                                    color: "#f5c96e",
+                                    padding: "6px 16px",
+                                    borderRadius: "6px",
+                                    boxShadow: "3px 3px 0px #000",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
 
                         {shopBuildings.length === 0 ? (
-                            <p>No buildings available</p>
+                            <p className="text-white">No buildings available</p>
                         ) : (
-                            shopBuildings.map((b) => (
-                                <div
-                                    key={b.building_id}
-                                    className="border p-3 mb-2 flex justify-between items-center"
-                                >
-                                    <div>
-                                        <p className="font-semibold">{b.name}</p>
-                                        <p className="text-sm">
+                            <div className="grid grid-cols-3 gap-4">
+                                {shopBuildings.map((b) => (
+                                    <div
+                                        key={b.building_id}
+                                        className="flex flex-col items-center rounded-xl p-3 gap-2"
+                                        style={{
+                                            backgroundColor: "#3d1f00",
+                                            border: "2px solid #8B5E3C",
+                                        }}
+                                    >
+                                        <p
+                                            className="font-bold text-sm tracking-wide uppercase text-center"
+                                            style={{ color: "#f5c96e" }}
+                                        >
+                                            {b.name}
+                                        </p>
+
+                                        <img
+                                            src={`/assets/buildings/${b.building_id}.png`}
+                                            alt={b.name}
+                                            className="w-16 h-16 object-contain"
+                                        />
+
+                                        <p className="text-xs text-yellow-300">
                                             Cost: {b.cost} {b.cost_type}
                                         </p>
-                                        <p className="text-sm">
+
+                                        <p className="text-xs text-gray-300">
                                             Owned: {b.current_count}/{b.max_quantity}
                                         </p>
+
+                                        <button
+                                            onClick={() => handlePickBuilding(b)}
+                                            style={{
+                                                backgroundColor: "#4a7c3f",
+                                                border: "2px solid #2d5a27",
+                                                color: "white",
+                                                padding: "4px 16px",
+                                                borderRadius: "6px",
+                                                boxShadow: "3px 3px 0px #000",
+                                                cursor: "pointer",
+                                                width: "100%",
+                                                fontSize: "13px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Build
+                                        </button>
                                     </div>
-
-                                    <button
-                                        onClick={() => handlePickBuilding(b)}
-                                        className="border px-3 py-1 bg-pink-500 text-yellow"
-                                    >
-                                        Build
-                                    </button>
-                                </div>
-                            ))
+                                ))}
+                            </div>
                         )}
-
-                        <button
-                            onClick={() => setShowShop(false)}
-                            className="border px-4 py-2 mt-4"
-                        >
-                            Close
-                        </button>
                     </div>
                 </div>
             )}
