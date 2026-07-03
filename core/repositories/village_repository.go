@@ -66,7 +66,7 @@ func (r *VillageRepository) GetVillage(userID int64) (models.Village, error) {
 	return v, err
 }
 
-func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse, error) {
+func (r *VillageRepository) VillageState(user_id int64) (models.VillageResponse, error) {
 	ctx := context.Background()
 	var village models.VillageResponse
 	err := r.DB.QueryRow(ctx,
@@ -76,11 +76,17 @@ func (r *VillageRepository) VillateState(user_id int64) (models.VillageResponse,
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
-	_ = CompleteUpgrades(ctx, r.DB, village.ID)
+
+	err = CompleteUpgrades(ctx, r.DB, village.ID)
+	if err != nil {
+		return models.VillageResponse{}, err
+	}
+
 	err = r.CompleteTroopUpgrades(village.ID)
 	if err != nil {
 		return models.VillageResponse{}, err
 	}
+
 	buildings, err := r.VillageBuildings(village.ID)
 	if err != nil {
 		return models.VillageResponse{}, err

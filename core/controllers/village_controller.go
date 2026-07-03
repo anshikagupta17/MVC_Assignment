@@ -20,7 +20,7 @@ func VillageState(w http.ResponseWriter, r *http.Request) {
 	repo := repositories.VillageRepository{
 		DB: db.Conn,
 	}
-	village, err := repo.VillateState(userId)
+	village, err := repo.VillageState(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
