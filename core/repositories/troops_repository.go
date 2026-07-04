@@ -60,8 +60,7 @@ func TrainTroops(ctx context.Context, db DBExecutor, village_id int64, troop_id 
 		FROM troops_village tv
 		JOIN troops_base_metadata tb
 		ON tb.id = tv.troops_id
-		WHERE tv.village_id = $1
-		FOR UPDATE OF tv`, village_id).Scan(&used_space)
+		WHERE tv.village_id = $1`, village_id).Scan(&used_space)
 
 	if err != nil {
 		return err
