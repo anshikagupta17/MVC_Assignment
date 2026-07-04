@@ -98,6 +98,7 @@ type MockDBExecutor struct {
 	queryRowIndex int
 	queryResults  []*MockRows
 	queryIndex    int
+	execErr       error
 }
 
 func (m *MockDBExecutor) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
@@ -113,5 +114,5 @@ func (m *MockDBExecutor) Query(ctx context.Context, sql string, args ...any) (pg
 }
 
 func (m *MockDBExecutor) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
-	return pgconn.CommandTag{}, nil
+	return pgconn.CommandTag{}, m.execErr
 }
