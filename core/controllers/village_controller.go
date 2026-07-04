@@ -5,42 +5,20 @@ import (
 
 	"encoding/json"
 
-	db "github.com/anshikagupta17/MVC_Assignment/core/database"
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
 func VillageState(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value("user_id").(int64)
+	village, _, ok := GetVillageState(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-	village, err := repo.VillageState(userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(village)
 }
 func GetVillageBuildings(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-	village, err := repo.GetVillage(userId)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
 		return
 	}
 	building, err := repo.VillageBuildings(village.ID)
@@ -53,25 +31,14 @@ func GetVillageBuildings(w http.ResponseWriter, r *http.Request) {
 }
 
 func MoveBuilding(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userId)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
 		return
 	}
 
 	var req models.MoveBuildingRequest
 
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -94,9 +61,8 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddBuilding(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -105,16 +71,6 @@ func AddBuilding(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userId)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
 		return
 	}
 
@@ -129,19 +85,8 @@ func AddBuilding(w http.ResponseWriter, r *http.Request) {
 }
 func GetVillageTroops(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "village not found", http.StatusNotFound)
 		return
 	}
 
@@ -156,9 +101,8 @@ func GetVillageTroops(w http.ResponseWriter, r *http.Request) {
 
 func UpgradeBuilding(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -167,16 +111,6 @@ func UpgradeBuilding(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "village not found", http.StatusNotFound)
 		return
 	}
 
@@ -189,19 +123,8 @@ func UpgradeBuilding(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 func GetShopBuildings(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "village not found", http.StatusNotFound)
 		return
 	}
 

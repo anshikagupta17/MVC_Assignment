@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	db "github.com/anshikagupta17/MVC_Assignment/core/database"
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
 func UpgradeTroops(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -22,15 +19,6 @@ func UpgradeTroops(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "village not found", http.StatusNotFound)
 		return
 	}
 
@@ -49,9 +37,8 @@ func TrainTroops(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -67,23 +54,12 @@ func TrainTroops(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
-		return
-	}
-
 	err = repo.TrainTroopsTX(village.ID, req.TroopID, req.Quantity)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Troops trained successfully",

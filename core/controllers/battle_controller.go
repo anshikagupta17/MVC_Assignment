@@ -4,26 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	db "github.com/anshikagupta17/MVC_Assignment/core/database"
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
-	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
 func FindOpponent(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "village not found", http.StatusNotFound)
 		return
 	}
 
@@ -54,9 +41,8 @@ func FindOpponent(w http.ResponseWriter, r *http.Request) {
 
 func AttackVillage(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -65,16 +51,6 @@ func AttackVillage(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(userID)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusNotFound)
 		return
 	}
 

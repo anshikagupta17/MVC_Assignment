@@ -3,9 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-
-	db "github.com/anshikagupta17/MVC_Assignment/core/database"
-	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
 func ResourceCollection(w http.ResponseWriter, r *http.Request) {
@@ -13,19 +10,8 @@ func ResourceCollection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	user_id, ok := r.Context().Value("user_id").(int64)
+	village, repo, ok := GetVillage(w, r)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-
-	village, err := repo.GetVillage(user_id)
-	if err != nil {
-		http.Error(w, "Village not found", http.StatusBadRequest)
 		return
 	}
 	collected_resources, err := repo.CollectVillageResources(village.ID)
