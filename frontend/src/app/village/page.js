@@ -167,6 +167,7 @@ function VillagePage() {
             setSelectedBuilding(null)
 
             await fetchVillage();
+            showSuccess("Building placed!")
         } catch (err) {
             console.error(err);
             showError(err.message, "Couldn't move the building there. Try a different spot.");
@@ -333,7 +334,6 @@ function VillagePage() {
     }
 
     if (!village) {
-        console.log(village);
         return <div className="p-6">No village found</div>;
     }
 
@@ -570,71 +570,128 @@ function VillagePage() {
 
             {showTroops && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-[#5ECBC8] text-white p-6 rounded max-w-md w-full max-h-[80vh] overflow-y-auto">
+                    <div className="p-6 rounded-xl max-w-md w-full max-h-[80vh] overflow-y-auto"
+                        style={{ backgroundColor: "#2a1200", border: "2px solid #8B5E3C" }}>
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold">Troops</h2>
+                            <h2 className="text-xl font-bold"style={{ color: "#f5c96e" }}>
+                                Troops
+                            </h2>
                         
-                            <button onClick={() => { setShowTroops(false); setSelectedTroop(null); }} className="border px-4 py-2 mt-4">
+                            <button 
+                                onClick={() => { setShowTroops(false); setSelectedTroop(null); }}
+                                style={{
+                                    backgroundColor: "#3d1f00",
+                                    border: "2px solid #8B5E3C",
+                                    color: "#f5c96e",
+                                    padding: "6px 16px",
+                                    borderRadius: "6px",
+                                    boxShadow: "3px 3px 0px #000",
+                                    cursor: "pointer",
+                                }}
+                            >
                                 Close
                             </button>
                         </div>
 
                         {troops.length === 0 ? (
-                            <p>No troops trained yet</p>
+                            <p className="text-white"> No troops trained yet</p>
                         ) : (
-                            troops.map((t) => {
-                                const isLocked = t.unlock_level > village.townhall_level;
+                            <div className="grid grid-cols-2 gap-3">
+                                {troops.map((t) => {
+                                    const isLocked = t.unlock_level > village.townhall_level;
 
-                                return(
-                                    <div
-                                        key={t.troop_id}
-                                        onClick={() => {
-                                            if (!isLocked) setSelectedTroop(t);
-                                        }}
-                                        className={`border border-gray-600 p-3 mb-2 rounded ${
-                                            isLocked
-                                                ? "bg-gray-500 opacity-50 cursor-not-allowed"
-                                                : "bg-[#A43B76] text-white cursor-pointer"
-                                        } ${
-                                            selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-300" : ""
-                                        }`}
-                                    >
-                                        <img
-                                            src={`/assets/troops/${t.troop_id}.png`}
-                                            alt={t.name}
-                                            className="w-12 h-12"
-                                        ></img>
-                                        <p className="font-semibold">{t.name}</p>
-                                        <p className="text-sm">Level: {t.level || "-"}</p>
-                                        <p className="text-sm">Quantity: {t.quantity}</p>
-                                        <p className="text-sm">Damage: {t.damage ?? "-"}</p>
-                                        <p className="text-sm">Max Health: {t.max_health ?? "-"}</p>
-                                        {isLocked && (
-                                            <p className="text-xs mt-1">Unlocks at Townhall {t.unlock_level}</p>
-                                        )}
-                                    </div>
-                                );
-                            })
+                                    return(
+                                        <div
+                                            key={t.troop_id}
+                                            onClick={() => {
+                                                if (!isLocked) setSelectedTroop(t);
+                                            }}
+                                            className={`flex flex-col items-center p-3 rounded-xl gap-1 ${
+                                                isLocked
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : "cursor-pointer"
+                                            } ${
+                                                selectedTroop?.troop_id === t.troop_id ? "ring-2 ring-yellow-400" : ""
+                                            }`}
+                                            style={{
+                                                backgroundColor: isLocked ? "#1a1a1a" : "#3d1f00",
+                                                border: "2px solid #8B5E3C",
+                                            }}
+                                        >
+                                            <p
+                                                className="font-bold text-sm tracking-wide uppercase text-center"
+                                                style={{ color: "#f5c96e" }}
+                                            >
+                                                {t.name}
+                                            </p>
+
+                                            <img
+                                                src={`/assets/troops/${t.troop_id}.png`}
+                                                alt={t.name}
+                                                className="w-12 h-12 object-contain"
+                                            ></img>
+                                            <p className="text-xs text-yellow-300">Lv {t.level || "-"}</p>
+                                            <p className="text-xs text-gray-300">Qty: {t.quantity}</p>
+                                            <p className="text-xs text-gray-300">DMG: {t.damage ?? "-"}</p>
+                                            <p className="text-xs text-gray-300">HP: {t.max_health ?? "-"}</p>
+
+                                            {isLocked && (
+                                                <p className="text-xs mt-1" style={{ color: "#f5c96e" }}>
+                                                    Unlocks at Townhall {t.unlock_level}
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
 
                         {selectedTroop && (
-                            <div className="border-t pt-4 mt-4">
-                                <label className="block mb-2">
+                            <div className="border-t pt-4 mt-4" style={{ borderColor: "#8B5E3C" }}>
+                                <label className="block mb-2 text-white text-sm">
                                     Quantity to train:
                                     <input
                                         type="number"
                                         min="1"
                                         value={trainQuantity}
                                         onChange={(e) => setTrainQuantity(Number(e.target.value))}
-                                        className="border ml-2 px-2 py-1 w-20 text-white"
+                                        className="border ml-2 px-2 py-1 w-20"
+                                        style={{
+                                            backgroundColor: "#1a0a00",
+                                            border: "1px solid #8B5E3C",
+                                            color: "white",
+                                            borderRadius: "4px",
+                                        }}
                                     />
                                 </label>
 
-                                <div className="flex gap-2">
-                                    <button onClick={trainTroop} className="border px-4 py-2 bg-green-500 text-white">
+                                <div className="flex gap-2 mt-2">
+                                    <button 
+                                        onClick={trainTroop} 
+                                        style={{
+                                            backgroundColor: "#4a7c3f",
+                                            border: "2px solid #2d5a27",
+                                            color: "white",
+                                            padding: "6px 16px",
+                                            borderRadius: "6px",
+                                            boxShadow: "3px 3px 0px #000",
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                        }}>
                                         Train
                                     </button>
-                                    <button onClick={upgradeTroop} className="border px-4 py-2 bg-blue-500 text-white">
+                                    <button 
+                                        onClick={upgradeTroop} 
+                                        style={{
+                                            backgroundColor: "#1a3a6b",
+                                            border: "2px solid #0f2447",
+                                            color: "white",
+                                            padding: "6px 16px",
+                                            borderRadius: "6px",
+                                            boxShadow: "3px 3px 0px #000",
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                        }}>
                                         Upgrade
                                     </button>
                                 </div>
