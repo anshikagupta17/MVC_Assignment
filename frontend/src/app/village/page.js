@@ -167,7 +167,6 @@ function VillagePage() {
             setSelectedBuilding(null)
 
             await fetchVillage();
-            showSuccess("Building placed!")
         } catch (err) {
             console.error(err);
             showError(err.message, "Couldn't move the building there. Try a different spot.");
