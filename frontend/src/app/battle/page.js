@@ -54,6 +54,7 @@ export default function BattlePage() {
         setLoading(true);
         setOpponent(null);
         setBattleResult(null);
+        setBattlePhase("idle");
 
         try {
             const res = await apiFetch("/battle/matchmake", {
@@ -150,7 +151,6 @@ export default function BattlePage() {
             clearInterval(messageInterval);
             setBattleResult(data);
             setBattlePhase("result");
-            setOpponent(null);
             setSelectedTroops({});
             await fetchTroops();
         } catch (err) {
