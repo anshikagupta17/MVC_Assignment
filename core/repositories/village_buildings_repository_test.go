@@ -1,23 +1,25 @@
 package repositories
 
-import "testing"
+import (
+	"context"
+	"errors"
+	"testing"
+)
 
-func TestTrueCases(t *testing.T) {
-	defenseIDs := []int64{2, 3, 4, 5}
-
-	for _, id := range defenseIDs {
-		if !isDefense(id) {
-			t.Errorf("Expected building_id %d to be a defense building", id)
-		}
+func TestInitialBuildings_DBError(t *testing.T) {
+	db := &MockDBExecutor{
+		execErr: errors.New("Connection failed"),
+	}
+	err := InitialBuildings(context.Background(), db, 1)
+	if err == nil {
+		t.Fatalf("Expected error, got nil")
 	}
 }
 
-func TestIsDefense_FalseCases(t *testing.T) {
-	nonDefenseIDs := []int64{1, 6, 7, 8, 9, 10}
-
-	for _, id := range nonDefenseIDs {
-		if isDefense(id) {
-			t.Errorf("Expected building_id %d to NOT be a defense building", id)
-		}
+func TestInitialBuildings_Success(t *testing.T) {
+	db := &MockDBExecutor{}
+	err := InitialBuildings(context.Background(), db, 1)
+	if err != nil {
+		t.Errorf("Expected nil, got %s", err.Error())
 	}
 }
