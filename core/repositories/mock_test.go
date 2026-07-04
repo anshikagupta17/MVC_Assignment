@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"time"
 
@@ -102,11 +103,13 @@ func (m *MockRows) RawValues() [][]byte { return nil }
 func (m *MockRows) Conn() *pgx.Conn { return nil }
 
 type MockDBExecutor struct {
-	queryRows     []*MockRow
-	queryRowIndex int
-	queryResults  []*MockRows
-	queryIndex    int
-	execErr       error
+	queryRows        []*MockRow
+	queryRowIndex    int
+	queryResults     []*MockRows
+	queryIndex       int
+	execErr          error
+	queryErr         error
+	execRowsAffected int64
 }
 
 func (m *MockDBExecutor) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
@@ -116,11 +119,19 @@ func (m *MockDBExecutor) QueryRow(ctx context.Context, sql string, args ...any) 
 }
 
 func (m *MockDBExecutor) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	if m.queryErr != nil {
+		return nil, m.queryErr
+	}
+
 	result := m.queryResults[m.queryIndex]
 	m.queryIndex++
 	return result, nil
 }
 
 func (m *MockDBExecutor) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
-	return pgconn.CommandTag{}, m.execErr
+	if m.execErr != nil {
+		return pgconn.CommandTag{}, m.execErr
+	}
+	return pgconn.NewCommandTag(fmt.Sprintf("UPDATE %d", m.execRowsAffected)), nil
+
 }
