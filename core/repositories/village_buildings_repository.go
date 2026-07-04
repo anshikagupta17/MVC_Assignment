@@ -65,9 +65,8 @@ func (r *VillageRepository) VillageBuildings(village_id int64) ([]models.Village
 
 	return result, nil
 }
-func (r *VillageRepository) InitialBuildings(village_id int64) error {
-	ctx := context.Background()
-	_, err := r.DB.Exec(ctx,
+func InitialBuildings(ctx context.Context, db DBExecutor, village_id int64) error {
+	_, err := db.Exec(ctx,
 		`INSERT INTO buildings_village
 		(village_id, building_id, level, x, y)
 		VALUES

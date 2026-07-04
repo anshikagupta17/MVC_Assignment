@@ -13,10 +13,9 @@ type UserRepository struct {
 	DB *pgxpool.Pool
 }
 
-func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error) {
-	ctx := context.Background()
+func CreateUser(ctx context.Context, db DBExecutor, username, hashed_pass string) (int64, error) {
 	var id int64
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`INSERT INTO users (username, pass_hash)
 		 VALUES ($1, $2)
 		 RETURNING id`, username, hashed_pass).Scan(&id)
@@ -30,6 +29,33 @@ func (r *UserRepository) CreateUser(username, hashed_pass string) (int64, error)
 	}
 
 	return id, nil
+}
+
+func (r *UserRepository) RegisterTX(username string, hashed_pass string) (int64, error) {
+	ctx := context.Background()
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	user_id, err := CreateUser(ctx, tx, username, hashed_pass)
+	if err != nil {
+		return 0, err
+	}
+
+	village_id, err := CreateVillage(ctx, tx, user_id)
+	if err != nil {
+		return 0, err
+	}
+
+	err = InitialBuildings(ctx, tx, village_id)
+	if err != nil {
+		return 0, err
+	}
+
+	return user_id, tx.Commit(ctx)
 }
 
 func (r *UserRepository) GetUser(username string) (models.User, error) {

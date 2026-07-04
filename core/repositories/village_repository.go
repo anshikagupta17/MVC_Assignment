@@ -11,10 +11,9 @@ type VillageRepository struct {
 	DB *pgxpool.Pool
 }
 
-func (r *VillageRepository) CreateVillage(user_id int64) (int64, error) {
-	ctx := context.Background()
+func CreateVillage(ctx context.Context, db DBExecutor, user_id int64) (int64, error) {
 	var village_id int64
-	err := r.DB.QueryRow(ctx,
+	err := db.QueryRow(ctx,
 		`INSERT INTO villages (
 			user_id,
 			townhall_level,

@@ -39,25 +39,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		DB: db.Conn,
 	}
 
-	user_id, err := repo.CreateUser(req.Username, hash_pass)
+	user_id, err := repo.RegisterTX(req.Username, hash_pass)
 
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
-		return
-	}
-
-	village_repo := repositories.VillageRepository{
-		DB: db.Conn,
-	}
-	village_id, err := village_repo.CreateVillage(user_id)
-	if err != nil {
-		http.Error(w, "Failed to create village", http.StatusInternalServerError)
-		return
-	}
-
-	err = village_repo.InitialBuildings(village_id)
-	if err != nil {
-		http.Error(w, "Failed to load buildings", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
