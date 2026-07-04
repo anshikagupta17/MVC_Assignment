@@ -36,8 +36,12 @@ func (m *MockRow) Scan(dest ...any) error {
 			if val == nil {
 				*v = nil
 			} else {
-				t := val.(time.Time)
-				*v = &t
+				switch t := val.(type) {
+				case *time.Time:
+					*v = t
+				case time.Time:
+					*v = &t
+				}
 			}
 		}
 	}
@@ -71,8 +75,12 @@ func (m *MockRows) Scan(dest ...any) error {
 			if val == nil {
 				*v = nil
 			} else {
-				t := val.(time.Time)
-				*v = &t
+				switch t := val.(type) {
+				case *time.Time:
+					*v = t
+				case time.Time:
+					*v = &t
+				}
 			}
 		}
 	}
