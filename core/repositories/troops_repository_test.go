@@ -86,6 +86,21 @@ func TestTrainTroops_DBError(t *testing.T) {
 	}
 }
 
+func TestTrainTroops_ZeroQuantity(t *testing.T) {
+	db := &MockDBExecutor{
+		queryRows: []*MockRow{
+			{values: []any{1, 500}},
+			{values: []any{20}},
+			{values: []any{1, 50, 1}},
+			{values: []any{0}},
+		},
+	}
+	err := TrainTroops(context.Background(), db, 1, 1, 0)
+	if err != nil {
+		t.Errorf("Expected no error for zero quantity, got %s", err.Error())
+	}
+}
+
 func TestUpgradeTroops_AlreadyUpgrading(t *testing.T) {
 	timer := time.Now().Add(60 * time.Second)
 	db := &MockDBExecutor{
