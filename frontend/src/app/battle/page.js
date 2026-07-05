@@ -14,7 +14,7 @@ export default function BattlePage() {
     const [battleMessage, setBattleMessage] = useState("");
     const [messageIndex, setMessageIndex] = useState(0);
     const [errorMsg, setErrorMsg] = useState("");
-    const [showTroopPanel, setShowTroopPanel] = useState(false);
+    const [searching, setSearching] = useState(false);
 
     const battleMessages = [
         "Troops advancing",
@@ -52,6 +52,7 @@ export default function BattlePage() {
 
 
     async function FindOpponent() {
+        setSearching(true);
         setLoading(true);
         setOpponent(null);
         setBattleResult(null);
@@ -74,6 +75,7 @@ export default function BattlePage() {
             showError(err.message, "Couldn't find an opponent right now. Try again in a bit.");
         } finally {
             setLoading(false);
+            setSearching(false);
         }
     }
 
@@ -169,7 +171,7 @@ export default function BattlePage() {
                     {errorMsg}
                 </div>
             )}
-            {battlePhase === "idle" && !opponent && (
+            {battlePhase === "idle" && !opponent && !searching && (
                 <div className="flex flex-col items-center justify-center w-full h-full gap-6"
                     style={{ backgroundImage: `url('/assets/match.jpeg')`, 
                         backgroundSize: "cover"}}>
@@ -239,7 +241,7 @@ export default function BattlePage() {
                     </div>
 
                     <Link href="/village" className="fixed top-4 left-4 z-20">
-                        <button className="bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e] px-4 py-2 rounded">
+                        <button className="bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e] px-4 py-2 rounded cursor-pointer">
                             Back
                         </button>
                     </Link>
@@ -247,7 +249,7 @@ export default function BattlePage() {
                     <button
                         onClick={FindOpponent}
                         disabled={loading}
-                        className="fixed top-4 right-4 z-20 font-bold px-4 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e]"
+                        className="fixed top-4 right-4 z-20 font-bold px-4 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e] cursor-pointer"
                     >
                         {loading ? "..." : "New Opponent"}
                     </button>
@@ -305,7 +307,7 @@ export default function BattlePage() {
 
                         <button
                             onClick={attackOpponent}
-                            className="fixed right-6 z-20 font-bold px-6 py-4 rounded-xl"
+                            className="fixed right-6 z-20 font-bold px-6 py-4 rounded-xl cursor-pointer"
                             style={{
                                 bottom: "160px",
                                 backgroundColor: "#7a1f1f",

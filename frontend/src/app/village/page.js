@@ -398,7 +398,7 @@ function VillagePage() {
 
                 <button
                     onClick={handleLogout}
-                    className="bg-[#DCD7A0] rounded-full w-10 h-10 flex items-center justify-center"
+                    className="bg-[#DCD7A0] rounded-full w-10 h-10 flex items-center justify-center cursor-pointer"
                 >
                     <Image
                         src="/assets/logout3.png"
@@ -464,7 +464,7 @@ function VillagePage() {
                     {(selectedBuilding.building_id === 6 || selectedBuilding.building_id === 7) && (
                         <button
                             onClick={collectResources}
-                            className="border px-4 py-2 mt-2 bg-yellow-500 text-white"
+                            className="border px-4 py-2 mt-2 bg-yellow-500 text-white cursor-pointer"
                         >
                             Collect
                         </button>
@@ -478,7 +478,7 @@ function VillagePage() {
                     ) : (
                         <button
                             onClick={upgradeBuilding}
-                            className="border px-4 py-2 mt-2 bg-blue-500 text-white"
+                            className="border px-4 py-2 mt-2 bg-blue-500 text-white cursor-pointer"
                         >
                             Upgrade
                         </button>
