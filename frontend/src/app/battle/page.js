@@ -129,7 +129,7 @@ export default function BattlePage() {
         setMessageIndex(0);
         setBattleMessage(battleMessages[0]);
 
-        const messageInterval = setInterval(advanceBattleMessage, 6000);
+        const messageInterval = setInterval(advanceBattleMessage, 4000);
 
         try {
             const res = await apiFetch("/battle/attack", {
