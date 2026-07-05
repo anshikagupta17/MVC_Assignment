@@ -80,6 +80,7 @@ func InitialBuildings(ctx context.Context, db DBExecutor, village_id int64) erro
 
 func (r *VillageRepository) MoveBuilding(village_id, building_instance_id int64, x, y int) error {
 	ctx := context.Background()
+
 	_, err := r.DB.Exec(
 		ctx,
 		`UPDATE buildings_village
@@ -572,4 +573,16 @@ func (r *VillageRepository) GetShopBuildings(village_id int64) ([]models.ShopBui
 	}
 
 	return result, nil
+}
+
+func (r *VillageRepository) GetBuildingSize(village_id int64, building_instance_id int64) (int, int, error) {
+	ctx := context.Background()
+	var sizex, sizey int
+	err := r.DB.QueryRow(ctx,
+		`SELECT bm.size_x, bm.size_y
+		FROM buildings_village bv
+		JOIN buildings_metadata bm ON bm.id = bv.building_id
+		WHERE bv.id = $1 AND bv.village_id = $2`,
+		building_instance_id, village_id).Scan(&sizex, &sizey)
+	return sizex, sizey, err
 }
