@@ -25,6 +25,7 @@ function VillagePage() {
     const [trainQuantity, setTrainQuantity] = useState(1);
     const [errorMsg, setErrorMsg] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
+    const [isMoving, setIsMoving] = useState(false);
 
 
     const { logout } = useAuth();
@@ -146,7 +147,8 @@ function VillagePage() {
     }
 
     async function moveBuilding(x, y) {
-        if (!selectedBuilding) return;
+        if (!selectedBuilding|| isMoving) return;
+        setIsMoving(true);
 
         try {
             const res = await apiFetch("/village/buildings/move", {
@@ -170,7 +172,9 @@ function VillagePage() {
         } catch (err) {
             console.error(err);
             showError(err.message, "Couldn't move the building there. Try a different spot.");
-        }
+        } finally {
+        setIsMoving(false);
+    }
     }
 
     async function openShop() {
