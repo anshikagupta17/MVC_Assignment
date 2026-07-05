@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
 
 	"encoding/json"
 
 	"github.com/anshikagupta17/MVC_Assignment/core/models"
+	"github.com/anshikagupta17/MVC_Assignment/core/repositories"
 )
 
 func VillageState(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +48,22 @@ func MoveBuilding(w http.ResponseWriter, r *http.Request) {
 
 	if req.X < 0 || req.X > 49 || req.Y < 0 || req.Y > 49 {
 		http.Error(w, "Invalid position", http.StatusBadRequest)
+		return
+	}
+
+	size_x, size_y, err := repo.GetBuildingSize(village.ID, req.BuildingInstanceId)
+	if err != nil {
+		http.Error(w, "Building not found", http.StatusNotFound)
+		return
+	}
+
+	canPlace, err := repositories.CanPlace(context.Background(), repo.DB, village.ID, size_x, size_y, req.X, req.Y, req.BuildingInstanceId)
+	if err != nil {
+		http.Error(w, "Error checking placement", http.StatusInternalServerError)
+		return
+	}
+	if !canPlace {
+		http.Error(w, "Position blocked by another building", http.StatusBadRequest)
 		return
 	}
 
