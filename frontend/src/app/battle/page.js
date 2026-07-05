@@ -174,14 +174,14 @@ export default function BattlePage() {
                     style={{ backgroundImage: `url('/assets/match.jpeg')`, 
                         backgroundSize: "cover"}}>
                     <Link href="/village">
-                        <button className="px-4 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e]">
+                        <button className="px-4 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e] hover:bg-[#8B5E3C] hover:border-[#3d1f00]">
                             Back to Village
                         </button>
                     </Link>
                     <button
                         onClick={FindOpponent}
                         disabled={loading}
-                        className="bg-red-700 hover:bg-red-600 text-white text-xl font-bold px-10 py-4 rounded-xl border-2 border-red-400 shadow-lg"
+                        className="bg-[#3d1f00] hover:bg-[#8B5E3C] text-[#f5c96e] text-xl font-bold px-10 py-4 rounded border-2 border-[#8B5E3C] hover:border-[#3d1f00] shadow-lg"
                     >
                         {loading ? "Searching..." : "Find Opponent"}
                     </button>
