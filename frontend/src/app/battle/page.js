@@ -14,6 +14,7 @@ export default function BattlePage() {
     const [battleMessage, setBattleMessage] = useState("");
     const [messageIndex, setMessageIndex] = useState(0);
     const [errorMsg, setErrorMsg] = useState("");
+    const [showTroopPanel, setShowTroopPanel] = useState(false);
 
     const battleMessages = [
         "Troops advancing",
@@ -146,7 +147,7 @@ export default function BattlePage() {
                 throw new Error(data.message || "Attack failed");
             }
 
-            await waitMilliseconds(30000);
+            await waitMilliseconds(20000);
 
             clearInterval(messageInterval);
             setBattleResult(data);
@@ -189,8 +190,9 @@ export default function BattlePage() {
             {battlePhase==="idle" && opponent && (
                 <>
                     <div
-                        className="relative w-full h-full overflow-hidden flex items-center justify-center"
+                        className="absolute inset-0"
                         style={{
+                            bottom: "120px",
                             backgroundImage: `
                                 linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
                                 linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
@@ -227,10 +229,8 @@ export default function BattlePage() {
                         </div>
                     </div>
 
-                    <div className="fixed top-14 left-1/2 -translate-x-1/2 z-20">
-                        <div
-                            className="flex gap-4 items-center px-6 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e]"
-                        >
+                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20">
+                        <div className="flex gap-4 items-center px-6 py-2 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e]">
                             <span>TH {opponent.townhall_level}</span>
                             <span>Trophies: {opponent.trophies}</span>
                             <span>Gold: {opponent.gold}</span>
@@ -252,84 +252,69 @@ export default function BattlePage() {
                         {loading ? "..." : "New Opponent"}
                     </button>
 
-                    <button
-                        onClick={() => document.getElementById("troop-modal").showModal()}
-                        className="fixed bottom-6 right-6 z-20 font-bold px-8 py-4 rounded bg-[#3d1f00] border border-[#8B5E3C] text-[#f5c96e]"
+                    <div
+                        className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-4 px-6"
+                        style={{
+                            height: "140px",
+                            backgroundColor: "#1a0a00",
+                            borderTop: "3px solid #8B5E3C",
+                        }}
                     >
-                        Select Troops & Attack
-                    </button>
-
-                    <dialog
-                        id="troop-modal"
-                        className="rounded-xl p-0 backdrop:bg-black/70"
-                        style={{ backgroundColor: "#2a1200", border: "2px solid #8B5E3C", minWidth: "400px" }}
-                    >
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-bold" style={{ color: "#f5c96e" }}>Select Troops</h2>
-                                <button
-                                    onClick={() => document.getElementById("troop-modal").close()}
-                                    style={{
-                                        backgroundColor: "#3d1f00",
-                                        border: "2px solid #8B5E3C",
-                                        color: "#f5c96e",
-                                        padding: "4px 12px",
-                                        borderRadius: "6px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Close
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                {troops.filter(function hasTroops(t) {
-                                    return t.quantity > 0;
-                                }).map((t) => (
-                                    <div
-                                        key={t.troop_id}
-                                        className={`bg-[#3d1f00] border-2 rounded-xl p-3 flex flex-col items-center gap-1 ${
-                                            selectedTroops[t.troop_id] > 0
-                                                ? "border-yellow-400 shadow-yellow-400 shadow-md"
-                                                : "border-[#8B5E3C]"
-                                        }`}
-                                    >
-                                        <p className="text-[#f5c96e] font-bold text-sm tracking-wide uppercase">
-                                            {t.name}
-                                        </p>
-                                        <img
-                                            src={`/assets/troops/${t.troop_id}.png`}
-                                            alt={t.name}
-                                            className="w-16 h-16 object-contain"
-                                        />
-                                        <div className="text-xs text-yellow-300">
-                                            <span>Owned: {t.quantity}</span>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max={t.quantity}
-                                            value={selectedTroops[t.troop_id] || 0}
-                                            onChange={(e) =>
-                                                handleTroopQuantityChange(t.troop_id, Number(e.target.value))
-                                            }
-                                            className="w-16 text-center bg-[#1a0a00] border border-[#8B5E3C] text-white rounded px-1 py-0.5 text-sm"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    document.getElementById("troop-modal").close();
-                                    attackOpponent();
+                        {troops.filter(function hasTroops(t) {
+                            return t.quantity > 0;
+                        }).map((t) => (
+                            <div
+                                key={t.troop_id}
+                                className="flex flex-col items-center gap-1 rounded-xl p-3"
+                                style={{
+                                    backgroundColor: "#3d1f00",
+                                    border: selectedTroops[t.troop_id] > 0
+                                        ? "2px solid #f5c96e"
+                                        : "2px solid #8B5E3C",
+                                    minWidth: "100px",
+                                    width: "100px",
                                 }}
-                                className="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl border-2 border-green-400 text-lg"
                             >
-                                Attack
-                            </button>
-                        </div>
-                    </dialog>
+                                <img
+                                    src={`/assets/troops/${t.troop_id}.png`}
+                                    alt={t.name}
+                                    className="w-12 h-12 object-contain"
+                                />
+                                <p className="text-xs font-bold uppercase text-center" style={{ color: "#f5c96e" }}>
+                                    {t.name}
+                                </p>
+                                <p className="text-xs text-gray-300">x{t.quantity}</p>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max={t.quantity}
+                                    value={selectedTroops[t.troop_id] || 0}
+                                    onChange={(e) =>
+                                        handleTroopQuantityChange(t.troop_id, Number(e.target.value))
+                                    }
+                                    className="w-14 text-center rounded px-1 py-0.5 text-xs"
+                                    style={{
+                                        backgroundColor: "#1a0a00",
+                                        border: "1px solid #8B5E3C",
+                                        color: "white",
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                        <button
+                            onClick={attackOpponent}
+                            className="fixed right-6 z-20 font-bold px-6 py-4 rounded-xl"
+                            style={{
+                                bottom: "160px",
+                                backgroundColor: "#7a1f1f",
+                                border: "2px solid #f87171",
+                                color: "white",
+                            }}
+                        >
+                            Attack
+                        </button>
                 </>
             )}
 
